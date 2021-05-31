@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+
+  go-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: go-server
+    environment: 
+      PORT: :50051
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 20M
+  
+  go-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: go-client
+    environment: 
+      HOST: go-server
+      PORT: :50051
+
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 20M
+
+networks: 
+  default:
