@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "bitbucket.org/eduardobcolombo/learning-grpc/portpb";
+option go_package = "github.com/academiadaweb/learning-grpc/portpb";
 
 package port;
 
