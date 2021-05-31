@@ -1,6 +1,6 @@
 GRPC_HOST = localhost
 GRPC_PORT = :50051
-LOCAL_PATH = /Users/eduardocolombo/go/src/github.com/academiadaweb/learning-grpc
+LOCAL_PATH = /Users/eduardocolombo/go/src/github.com/eduardobcolombo/learning-grpc
 
 generate:
 	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative portpb/ports.proto

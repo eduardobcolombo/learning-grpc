@@ -3,8 +3,8 @@ package persistence
 import (
 	"fmt"
 
-	"github.com/academiadaweb/learning-grpc/server/domain/entity"
-	"github.com/academiadaweb/learning-grpc/server/domain/repository"
+	"github.com/eduardobcolombo/learning-grpc/server/domain/entity"
+	"github.com/eduardobcolombo/learning-grpc/server/domain/repository"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
