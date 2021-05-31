@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/academiadaweb/learning-grpc/portpb"
 	"google.golang.org/grpc"
@@ -21,6 +24,9 @@ func main() {
 	defer cc.Close()
 	c := portpb.NewPortServiceClient(cc)
 	doClientStreaming(c)
+
+	// read the JSON file
+	readjsonFile("../ports.json")
 
 }
 
@@ -78,4 +84,45 @@ func doClientStreaming(c portpb.PortServiceClient) {
 		log.Fatalf("error receiving response from PortsUpdate: %v", err)
 	}
 	fmt.Printf("PortsUpdate Response %v\n", res)
+}
+
+func readjsonFile(fileName string) error {
+
+	start := time.Now()
+	f, err := os.Open(fileName)
+	if err != nil {
+		log.Fatalf("Error to read [file=%v]: %v", fileName, err.Error())
+	}
+
+	r := bufio.NewReader(f)
+	dec := json.NewDecoder(r)
+
+	t, err := dec.Token()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%T: %v\n", t, t)
+
+	for dec.More() {
+		var m map[string]interface{}
+
+		err := dec.Decode(&m)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("%v\n", m)
+	}
+
+	// read closing bracket
+	t, err = dec.Token()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%T: %v\n", t, t)
+
+	elapsed := time.Since(start)
+
+	fmt.Printf("To parse the file took [%v]\n", elapsed)
+	return nil
 }

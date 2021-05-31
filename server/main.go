@@ -18,6 +18,23 @@ type server struct {
 func main() {
 	fmt.Println("Server is running...")
 
+	//	TODO:
+	// dbdriver := os.Getenv("DB_DRIVER")
+	// host := os.Getenv("DB_HOST")
+	// password := os.Getenv("DB_PASSWORD")
+	// user := os.Getenv("DB_USER")
+	// dbname := os.Getenv("DB_NAME")
+	// dbport := os.Getenv("DB_PORT")
+
+	// services, err := persistence.NewRepositories(dbdriver, user, password, dbport, host, dbname)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer services.Close()
+	// services.Automigrate()
+
+	// ports := interfaces.NewPort(services.Port)
+
 	port := os.Getenv("PORT")
 	list, err := net.Listen("tcp", port)
 	if err != nil {

@@ -15,6 +15,7 @@ services:
           memory: 200M
         reservations:
           memory: 20M
+    depends_on: [db]
   
   go-client:
     build:
@@ -24,6 +25,12 @@ services:
     environment: 
       HOST: go-server
       PORT: :50051
+      DB_DRIVER: postgres
+      DB_HOST: db
+      DB_PASSWORD: passwd
+      DB_USER: user
+      DB_NAME: db
+      DB_PORT: 5432
 
     deploy:
       resources:
@@ -31,6 +38,16 @@ services:
           memory: 200M
         reservations:
           memory: 20M
+    depends_on: [db]          
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: passwd
+      POSTGRES_USER: user
+      POSTGRES_DB: db
+    ports:
+      - 5432:5432      
 
 networks: 
   default:

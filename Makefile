@@ -14,6 +14,12 @@ down:
 run_s:
 	@cd server; \
 	export PORT=$(GRPC_PORT); \
+	export DB_DRIVER=postgres; \
+	export DB_HOST=localhost; \
+	export DB_PASSWORD=passwd; \
+	export DB_USER=user; \
+	export DB_NAME=db; \
+	export DB_PORT=5432; \
 	go run main.go
 
 run_c:
@@ -37,6 +43,3 @@ build_c:
 		golang:1.16 \
 		go build -o bin/client.bin main.go		
 
-clean:
-	@rm -rf server/bin
-	@rm -rf client/bin
