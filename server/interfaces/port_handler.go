@@ -3,8 +3,8 @@ package interfaces
 import (
 	"log"
 
-	"github.com/academiadaweb/learning-grpc/server/application"
-	"github.com/academiadaweb/learning-grpc/server/domain/entity"
+	"github.com/eduardobcolombo/learning-grpc/server/application"
+	"github.com/eduardobcolombo/learning-grpc/server/domain/entity"
 )
 
 type Port struct {

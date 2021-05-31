@@ -7,7 +7,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/academiadaweb/learning-grpc/portpb"
+	"github.com/eduardobcolombo/learning-grpc/portpb"
 	"google.golang.org/grpc"
 )
 
