@@ -1,10 +1,5 @@
 module github.com/eduardobcolombo/learning-grpc/client
 
-// local replace
-replace github.com/eduardobcolombo/learning-grpc/portpb => /Users/eduardocolombo/go/src/github.com/eduardobcolombo/learning-grpc/portpb
-
-replace github.com/eduardobcolombo/learning-grpc/client => /Users/eduardocolombo/go/src/github.com/eduardobcolombo/learning-grpc/client
-
 go 1.16
 
 require (
