@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
 
 	"github.com/eduardobcolombo/learning-grpc/portpb"
 	"google.golang.org/grpc"
@@ -17,7 +18,7 @@ type server struct {
 
 func main() {
 	fmt.Println("Server is running...")
-
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	//	TODO:
 	// dbdriver := os.Getenv("DB_DRIVER")
 	// host := os.Getenv("DB_HOST")
@@ -35,7 +36,7 @@ func main() {
 
 	// ports := interfaces.NewPort(services.Port)
 
-	port := os.Getenv("PORT")
+	port := ":" + os.Getenv("PORT")
 	list, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
@@ -45,9 +46,20 @@ func main() {
 
 	portpb.RegisterPortServiceServer(s, &server{})
 
-	if err := s.Serve(list); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	go func() {
+		if err := s.Serve(list); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt)
+	<-ch
+	fmt.Println("Stopping the server")
+	s.Stop()
+	fmt.Println("Closing the listener")
+	list.Close()
+	fmt.Println("Shutdown")
 
 }
 

@@ -37,4 +37,6 @@ message PortResponse {
 service PortService{
     // Client Streaming
     rpc PortsUpdate (stream PortRequest) returns (PortResponse) {};
+    // Unary
+    rpc PortsGet () returns (PortResponse) {};
 }
