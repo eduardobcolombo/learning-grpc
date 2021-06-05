@@ -15,6 +15,7 @@ message Port {
     string timezone = 8;
     Unlocs unlocs = 9;
     string code = 10;
+    int32 id = 11;
 }
 
 message Coordinates {
@@ -34,9 +35,17 @@ message PortResponse {
     string result = 1;
 }
 
+message ListPortsRequest {
+
+}
+
+message ListPortsResponse {
+    Port port = 1;
+}
+
 service PortService{
     // Client Streaming
     rpc PortsUpdate (stream PortRequest) returns (PortResponse) {};
-    // Unary
-    rpc PortsGet () returns (PortResponse) {};
+    // Server Streaming
+    rpc PortsList(ListPortsRequest) returns (stream ListPortsResponse) {};
 }

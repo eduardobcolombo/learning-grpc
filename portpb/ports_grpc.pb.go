@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type PortServiceClient interface {
 	// Client Streaming
 	PortsUpdate(ctx context.Context, opts ...grpc.CallOption) (PortService_PortsUpdateClient, error)
+	// Server Streaming
+	PortsList(ctx context.Context, in *ListPortsRequest, opts ...grpc.CallOption) (PortService_PortsListClient, error)
 }
 
 type portServiceClient struct {
@@ -64,12 +66,46 @@ func (x *portServicePortsUpdateClient) CloseAndRecv() (*PortResponse, error) {
 	return m, nil
 }
 
+func (c *portServiceClient) PortsList(ctx context.Context, in *ListPortsRequest, opts ...grpc.CallOption) (PortService_PortsListClient, error) {
+	stream, err := c.cc.NewStream(ctx, &PortService_ServiceDesc.Streams[1], "/port.PortService/PortsList", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &portServicePortsListClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type PortService_PortsListClient interface {
+	Recv() (*ListPortsResponse, error)
+	grpc.ClientStream
+}
+
+type portServicePortsListClient struct {
+	grpc.ClientStream
+}
+
+func (x *portServicePortsListClient) Recv() (*ListPortsResponse, error) {
+	m := new(ListPortsResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // PortServiceServer is the server API for PortService service.
 // All implementations must embed UnimplementedPortServiceServer
 // for forward compatibility
 type PortServiceServer interface {
 	// Client Streaming
 	PortsUpdate(PortService_PortsUpdateServer) error
+	// Server Streaming
+	PortsList(*ListPortsRequest, PortService_PortsListServer) error
 	mustEmbedUnimplementedPortServiceServer()
 }
 
@@ -79,6 +115,9 @@ type UnimplementedPortServiceServer struct {
 
 func (UnimplementedPortServiceServer) PortsUpdate(PortService_PortsUpdateServer) error {
 	return status.Errorf(codes.Unimplemented, "method PortsUpdate not implemented")
+}
+func (UnimplementedPortServiceServer) PortsList(*ListPortsRequest, PortService_PortsListServer) error {
+	return status.Errorf(codes.Unimplemented, "method PortsList not implemented")
 }
 func (UnimplementedPortServiceServer) mustEmbedUnimplementedPortServiceServer() {}
 
@@ -119,6 +158,27 @@ func (x *portServicePortsUpdateServer) Recv() (*PortRequest, error) {
 	return m, nil
 }
 
+func _PortService_PortsList_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListPortsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(PortServiceServer).PortsList(m, &portServicePortsListServer{stream})
+}
+
+type PortService_PortsListServer interface {
+	Send(*ListPortsResponse) error
+	grpc.ServerStream
+}
+
+type portServicePortsListServer struct {
+	grpc.ServerStream
+}
+
+func (x *portServicePortsListServer) Send(m *ListPortsResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // PortService_ServiceDesc is the grpc.ServiceDesc for PortService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -131,6 +191,11 @@ var PortService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "PortsUpdate",
 			Handler:       _PortService_PortsUpdate_Handler,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "PortsList",
+			Handler:       _PortService_PortsList_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "portpb/ports.proto",
