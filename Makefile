@@ -1,5 +1,6 @@
 GRPC_HOST = localhost
-GRPC_PORT = :50051
+GRPC_PORT = 50051
+API_PORT = 8888
 LOCAL_PATH = /app
 
 generate:
@@ -27,6 +28,7 @@ run_c:
 	@cd client; \
 	export HOST=$(GRPC_HOST); \
 	export PORT=$(GRPC_PORT); \
+	export API_PORT=$(API_PORT); \
 	go run main.go
 
 build_s: 

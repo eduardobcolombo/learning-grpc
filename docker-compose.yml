@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
       target: go-server
     environment: 
-      PORT: :50051
+      PORT: 50051
     deploy:
       resources:
         limits:
@@ -24,13 +24,14 @@ services:
       target: go-client
     environment: 
       HOST: go-server
-      PORT: :50051
+      PORT: 50051
       DB_DRIVER: postgres
       DB_HOST: db
       DB_PASSWORD: passwd
       DB_USER: user
       DB_NAME: db
       DB_PORT: 5432
+      API_PORT: 8888
 
     deploy:
       resources:
