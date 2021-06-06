@@ -10,7 +10,7 @@ func CORS() func(http.Handler) http.Handler {
 
 	allowedHeaders := []string{"X-Requested-With", "Authorization", "Content-Type", "X-Total-Count", "Location"}
 	allowedOrigins := []string{"*"}
-	allowedMethods := []string{"GET", "OPTIONS"}
+	allowedMethods := []string{"POST", "GET", "OPTIONS"}
 	exposedHeaders := []string{"X-Requested-With", "Authorization", "Content-Type", "X-Total-Count", "Location"}
 
 	return handlers.CORS(handlers.AllowedOrigins(allowedOrigins), handlers.AllowedHeaders(allowedHeaders),
@@ -21,6 +21,5 @@ func CORS() func(http.Handler) http.Handler {
 func (e *Environment) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
-		return
 	})
 }

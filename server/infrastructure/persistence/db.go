@@ -5,8 +5,8 @@ import (
 
 	"github.com/eduardobcolombo/learning-grpc/server/domain/entity"
 	"github.com/eduardobcolombo/learning-grpc/server/domain/repository"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type Repositories struct {
@@ -14,13 +14,13 @@ type Repositories struct {
 	db   *gorm.DB
 }
 
-func NewRepositories(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) (*Repositories, error) {
-	DBURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
-	db, err := gorm.Open(Dbdriver, DBURL)
+func NewRepositories(DbUser, DbPassword, DbPort, DbHost, DbName string) (*Repositories, error) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	db.LogMode(true)
+
 	return &Repositories{
 		Port: NewPortRepository(db),
 		db:   db,
@@ -28,9 +28,11 @@ func NewRepositories(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string
 }
 
 func (s *Repositories) Close() error {
-	return s.db.Close()
+	sqlDB, _ := s.db.DB()
+
+	return sqlDB.Close()
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.Port{}).Error
+	return s.db.AutoMigrate(&entity.Alias{}, &entity.Coordinate{}, &entity.Port{}, &entity.Region{}, &entity.Unloc{})
 }
