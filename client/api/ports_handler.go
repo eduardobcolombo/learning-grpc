@@ -5,17 +5,55 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/eduardobcolombo/learning-grpc/portpb"
+	"github.com/eduardobcolombo/portpb"
 )
 
 func (e *Environment) RetrievePorts(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Hit here")
-	e.GetGRPC()
-	doClientStreaming(e.psc)
+	ports, err := e.retrievePortsFromServer()
+	if err != nil {
+		log.Fatalf("Error while updating ports on server: [%v]", err)
+		e.Response(w, http.StatusInternalServerError, err)
+		return
+	}
+	e.Response(w, http.StatusOK, ports)
+}
+
+func (e *Environment) UpdatePorts(w http.ResponseWriter, r *http.Request) {
+	// readjsonFile()
+	msg, err := e.updatePortsOnServer()
+	if err != nil {
+		log.Fatalf("Error while updating ports on server: [%v]", err)
+		e.Response(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	e.Response(w, http.StatusOK, msg)
+}
+
+func (e *Environment) retrievePortsFromServer() (ports []*portpb.Port, err error) {
+	req := &portpb.ListPortsRequest{}
+	stream, err := e.psc.PortsList(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling retrievePortsFromServer: %v", err)
+		return ports, err
+	}
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Error receiving data from server: %v", err)
+		}
+		ports = append(ports, res.GetPort())
+	}
+	return ports, nil
 }
 
 func (e *Environment) readjsonFile(fileName string) error {
@@ -54,8 +92,7 @@ func (e *Environment) readjsonFile(fileName string) error {
 	return nil
 }
 
-func doClientStreaming(c portpb.PortServiceClient) {
-	fmt.Println("Starting to do a Client Streaming RPC...")
+func (e *Environment) updatePortsOnServer() (string, error) {
 	coords := &portpb.Coordinates{Lat: 111.111, Long: 222.222}
 	var unlocs *portpb.Unlocs
 	var unloc []string
@@ -95,19 +132,18 @@ func doClientStreaming(c portpb.PortServiceClient) {
 		},
 	}
 
-	stream, err := c.PortsUpdate(context.Background())
+	stream, err := e.psc.PortsUpdate(context.Background())
 	if err != nil {
 		log.Fatalf("error while calling PortsUpdate: %v", err)
-		return
+		return "", err
 	}
 	for _, req := range reqs {
-		fmt.Printf("Sending req: %v\n", req)
 		stream.Send(req)
 	}
 	res, err := stream.CloseAndRecv()
 	if err != nil {
 		log.Fatalf("error receiving response from PortsUpdate: %v", err)
-		return
+		return "", err
 	}
-	fmt.Printf("PortsUpdate Response %v\n", res)
+	return res.GetResult(), nil
 }

@@ -1,5 +1,5 @@
 GRPC_HOST = localhost
-GRPC_PORT = 50051
+GRPC_PORT = 50053
 API_PORT = 8888
 LOCAL_PATH = /app
 
@@ -15,7 +15,6 @@ down:
 run_s:
 	@cd server; \
 	export PORT=$(GRPC_PORT); \
-	export DB_DRIVER=postgres; \
 	export DB_HOST=localhost; \
 	export DB_PASSWORD=passwd; \
 	export DB_USER=user; \

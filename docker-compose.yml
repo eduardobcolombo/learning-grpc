@@ -9,6 +9,12 @@ services:
       target: go-server
     environment: 
       PORT: 50051
+      DB_HOST: db
+      DB_PASSWORD: passwd
+      DB_USER: user
+      DB_NAME: db
+      DB_PORT: 5432
+
     deploy:
       resources:
         limits:
@@ -16,7 +22,9 @@ services:
         reservations:
           memory: 20M
     depends_on: [db]
-  
+    networks: 
+      - grpc-network
+
   go-client:
     build:
       context: .
@@ -25,12 +33,6 @@ services:
     environment: 
       HOST: go-server
       PORT: 50051
-      DB_DRIVER: postgres
-      DB_HOST: db
-      DB_PASSWORD: passwd
-      DB_USER: user
-      DB_NAME: db
-      DB_PORT: 5432
       API_PORT: 8888
 
     deploy:
@@ -39,7 +41,11 @@ services:
           memory: 200M
         reservations:
           memory: 20M
-    depends_on: [db]          
+    depends_on: [db]  
+    ports: 
+      - 8888:8888
+    networks: 
+      - grpc-network
 
   db:
     image: postgres
@@ -49,6 +55,20 @@ services:
       POSTGRES_DB: db
     ports:
       - 5432:5432      
+    networks: 
+      - grpc-network      
 
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: we@can.do.it
+      PGADMIN_DEFAULT_PASSWORD: we
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+    - "8080:80"    
+    networks: 
+      - grpc-network     
+ 
 networks: 
-  default:
+  grpc-network:
+    driver: bridge

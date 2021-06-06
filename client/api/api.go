@@ -10,24 +10,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/eduardobcolombo/learning-grpc/portpb"
 	"github.com/gorilla/mux"
-	"google.golang.org/grpc"
 )
-
-func (e *Environment) GetGRPC() error {
-	address := os.Getenv("HOST") + ":" + os.Getenv("PORT")
-	fmt.Println("Client GRPC ", address)
-	cc, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-		return err
-	}
-	defer cc.Close()
-	e.psc = portpb.NewPortServiceClient(cc)
-
-	return nil
-}
 
 func Initialize() {
 	var wait time.Duration
@@ -37,7 +21,7 @@ func Initialize() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// e.readjsonFile("../../ports.json")
-
+	e.GetGRPC()
 	router := mux.NewRouter()
 	e.GetRoutes(router)
 	e.GetMiddlewares(router)
@@ -62,6 +46,10 @@ func Initialize() {
 	<-ch
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
+
+	log.Println("Closing GRPC Connection")
+	defer e.cc.Close()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("Error trying to shutting down: %s", err)
 	}

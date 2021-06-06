@@ -12,9 +12,14 @@ type portApp struct {
 var _ PortAppInterface = &portApp{}
 
 type PortAppInterface interface {
-	SavePort(*entity.Port) (*entity.Port, map[string]string)
+	SavePort(*entity.Port) (*entity.Port, error)
+	RetrievePorts() ([]*entity.Port, error)
 }
 
-func (p *portApp) SavePort(port *entity.Port) (*entity.Port, map[string]string) {
+func (p *portApp) SavePort(port *entity.Port) (*entity.Port, error) {
 	return p.pr.SavePort(port)
+}
+
+func (p *portApp) RetrievePorts() ([]*entity.Port, error) {
+	return p.pr.RetrievePorts()
 }
