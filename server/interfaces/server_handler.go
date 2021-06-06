@@ -28,7 +28,7 @@ func (s *Server) PortsUpdate(stream portpb.PortService_PortsUpdateServer) error 
 		}
 
 		if err != nil {
-			log.Fatalf("Error while reading client stream: %v", err)
+			log.Printf("Error while reading client stream: %v", err)
 		}
 
 		ports.SavePort(req)
@@ -43,14 +43,14 @@ func (s *Server) PortsList(req *portpb.ListPortsRequest, stream portpb.PortServi
 
 	lPorts, err := ports.RetrievePorts()
 	if err != nil {
-		log.Fatalf("Error while reading client stream: %v", err)
+		log.Printf("Error while reading client stream: %v", err)
 		return err
 	}
 	for _, p := range lPorts {
 		ppb := fillPortpbWithPort(p)
 		err = stream.Send(&portpb.ListPortsResponse{Port: ppb})
 		if err != nil {
-			log.Fatalf("Error while reading client stream loop: %v", err)
+			log.Printf("Error while reading client stream loop: %v", err)
 			return nil
 		}
 	}

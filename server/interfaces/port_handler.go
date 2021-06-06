@@ -55,7 +55,7 @@ func (p *Port) SavePort(portReq *portpb.PortRequest) error {
 
 	_, err := p.portApp.SavePort(&port)
 	if err != nil {
-		log.Fatalf("Error %v", err)
+		log.Printf("Error %v", err)
 		return err
 	}
 	return nil
@@ -64,7 +64,8 @@ func (p *Port) SavePort(portReq *portpb.PortRequest) error {
 func (p *Port) RetrievePorts() (ports []*entity.Port, err error) {
 	ports, err = p.portApp.RetrievePorts()
 	if err != nil {
-		log.Fatalf("Error %v", err)
+
+		log.Printf("Error retrieving data from DB: %v", err)
 		return ports, err
 	}
 	return ports, nil
