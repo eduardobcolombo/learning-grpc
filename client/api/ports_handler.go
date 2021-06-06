@@ -16,7 +16,7 @@ import (
 func (e *Environment) RetrievePorts(w http.ResponseWriter, r *http.Request) {
 	ports, err := e.retrievePortsFromServer()
 	if err != nil {
-		log.Fatalf("Error while updating ports on server: [%v]", err)
+		log.Printf("Error while updating ports on server: [%v]", err)
 		e.Response(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -24,10 +24,12 @@ func (e *Environment) RetrievePorts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Environment) UpdatePorts(w http.ResponseWriter, r *http.Request) {
-	// readjsonFile()
-	msg, err := e.updatePortsOnServer()
+	// TODO: Read the file from upload or URL if it is the case
+	fname := "../ports.json"
+	fmt.Printf("Importing the file: %s\n\n", fname)
+	msg, err := e.updatePortsOnServer(fname)
 	if err != nil {
-		log.Fatalf("Error while updating ports on server: [%v]", err)
+		log.Printf("Error while updating ports on server: [%v]", err)
 		e.Response(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -39,7 +41,7 @@ func (e *Environment) retrievePortsFromServer() (ports []*portpb.Port, err error
 	req := &portpb.ListPortsRequest{}
 	stream, err := e.psc.PortsList(context.Background(), req)
 	if err != nil {
-		log.Fatalf("error while calling retrievePortsFromServer: %v", err)
+		log.Printf("error while calling retrievePortsFromServer: %v", err)
 		return ports, err
 	}
 
@@ -49,101 +51,106 @@ func (e *Environment) retrievePortsFromServer() (ports []*portpb.Port, err error
 			break
 		}
 		if err != nil {
-			log.Fatalf("Error receiving data from server: %v", err)
+			log.Printf("Error receiving data from server: %v", err)
+			return ports, nil
 		}
 		ports = append(ports, res.GetPort())
 	}
 	return ports, nil
 }
 
-func (e *Environment) readjsonFile(fileName string) error {
+func (e *Environment) updatePortsOnServer(fileName string) (string, error) {
+
 	f, err := os.Open(fileName)
 	if err != nil {
-		log.Fatalf("Error to read [file=%v]: %v", fileName, err.Error())
+		log.Printf("Error to read [file=%v]: %v", fileName, err.Error())
 	}
 	defer f.Close()
+	stream, err := e.psc.PortsUpdate(context.Background())
+	if err != nil {
+		log.Printf("error while calling PortsUpdate: %v", err)
+		return "", err
+	}
 
+	// If the JSON file was an JSON array it could work better
 	r := bufio.NewReader(f)
 	dec := json.NewDecoder(r)
 
-	_, err = dec.Token()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for dec.More() {
 		var m map[string]interface{}
-
 		err := dec.Decode(&m)
 		if err != nil {
 			log.Fatal(err)
 		}
-		// Sending over GRPC
-		// use e.psc
-		fmt.Printf("%v\n", m)
-	}
 
-	// read closing bracket
-	_, err = dec.Token()
-	if err != nil {
-		log.Fatal(err)
-	}
+		for _, v := range m {
 
-	return nil
-}
+			jsonbody, err := json.Marshal(v)
+			if err != nil {
+				// do error check
+				fmt.Println(err)
+				return "", err
+			}
 
-func (e *Environment) updatePortsOnServer() (string, error) {
-	coords := &portpb.Coordinates{Lat: 111.111, Long: 222.222}
-	var unlocs *portpb.Unlocs
-	var unloc []string
-	unloc = append(unloc, "UNLOCKKKK")
-	unlocs = &portpb.Unlocs{
-		Unloc: unloc,
-	}
+			filledPort, err := fillPortpbWithJSON(jsonbody)
+			if err != nil {
+				log.Printf("Error to read [file=%v]: %v", fileName, err.Error())
+			}
 
-	reqs := []*portpb.PortRequest{
-		&portpb.PortRequest{
-			Port: &portpb.Port{
-				Name:        "XPTO",
-				City:        "Canela",
-				Country:     "Brazil",
-				Alias:       []string{},
-				Regions:     []string{},
-				Coordinates: coords,
-				Province:    "RS",
-				Timezone:    "TZ",
-				Unlocs:      unlocs,
-				Code:        "95680-000",
-			},
-		},
-		&portpb.PortRequest{
-			Port: &portpb.Port{
-				Name:        "XPTO2",
-				City:        "Canela",
-				Country:     "Brazil",
-				Alias:       []string{},
-				Regions:     []string{},
-				Coordinates: coords,
-				Province:    "RS",
-				Timezone:    "TZ",
-				Unlocs:      unlocs,
-				Code:        "95680-000",
-			},
-		},
-	}
+			stream.Send(filledPort)
 
-	stream, err := e.psc.PortsUpdate(context.Background())
-	if err != nil {
-		log.Fatalf("error while calling PortsUpdate: %v", err)
-		return "", err
-	}
-	for _, req := range reqs {
-		stream.Send(req)
+		}
 	}
 	res, err := stream.CloseAndRecv()
 	if err != nil {
-		log.Fatalf("error receiving response from PortsUpdate: %v", err)
+		log.Printf("error receiving response from PortsUpdate: %v", err)
 		return "", err
 	}
 	return res.GetResult(), nil
+}
+
+func fillPortpbWithJSON(jsonbody []byte) (req *portpb.PortRequest, err error) {
+
+	dataPort := portRequest{}
+	if err := json.Unmarshal(jsonbody, &dataPort); err != nil {
+		// do error check
+		log.Printf("Error reading the JSON file: [%v]", err)
+		return req, err
+	}
+
+	coord := &portpb.Coordinates{}
+	if len(dataPort.Coordinates) == 2 {
+		coord = &portpb.Coordinates{Lat: dataPort.Coordinates[0], Long: dataPort.Coordinates[1]}
+	}
+
+	return &portpb.PortRequest{
+		Port: &portpb.Port{
+			Name:        dataPort.Name,
+			City:        dataPort.City,
+			Country:     dataPort.Country,
+			Alias:       dataPort.Alias,
+			Regions:     dataPort.Regions,
+			Coordinates: coord,
+			Province:    dataPort.Province,
+			Timezone:    dataPort.Timezone,
+			Unlocs: &portpb.Unlocs{
+				Unloc: dataPort.Unlocs,
+			},
+			Code: dataPort.Code,
+		},
+	}, nil
+
+}
+
+type portRequest struct {
+	Name        string    `json:"name"`
+	Coordinates []float32 `json:"coordinates"`
+	City        string    `json:"city"`
+	Province    string    `json:"province"`
+	Country     string    `json:"country"`
+	Alias       []string  `json:"alias"`
+	Regions     []string  `json:"regions"`
+	Timezone    string    `json:"timezone"`
+	Unlocs      []string  `json:"unlocs"`
+	Code        string    `json:"code"`
 }

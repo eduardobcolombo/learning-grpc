@@ -12,7 +12,11 @@ In order to make things easy for devs, I created a make file to run docker comma
 
 `$ make generate` will generate the grpc files based on the protobuf messages
 
-`$ make up` will start the docker-composer
+`$ make up` will start the docker-composer with all instances (Db, Client and Server).
+You can test if it is working firing some curls like below:
+
+`curl http://localhost:8888/v1/ports -X POST` It will load all ports to the DB
+`curl http://localhost:8888/v1/ports -X GET` It will get all ports from DB
 
 `$ make down` will put the docker-composer down
 
@@ -23,5 +27,3 @@ In order to make things easy for devs, I created a make file to run docker comma
 `$ make build_s` will build the server go package and export it to server/bin folder
 
 `$ make build_c` will build the client go package and export it to client/bin folder
-
-`$ make clean` will clean the bins folders

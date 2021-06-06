@@ -23,7 +23,7 @@ func main() {
 	fmt.Printf("-----> %s\n", port)
 	list, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.Printf("Failed to listen: %v", err)
 	}
 
 	opts := []grpc.ServerOption{}
@@ -34,14 +34,14 @@ func main() {
 		kFile := "PATH_TO_THE_CERT.pem"
 		crds, err := credentials.NewServerTLSFromFile(cFile, kFile)
 		if err != nil {
-			log.Fatalf("Failed loading certificates: %v", err)
+			log.Printf("Failed loading certificates: %v", err)
 			return
 		}
 		opts = append(opts, grpc.Creds(crds))
 	}
 	services, err := initDB()
 	if err != nil {
-		log.Fatalf("Error initializating the DB: %v", err)
+		log.Printf("Error initializating the DB: %v", err)
 		return
 	}
 	srv := interfaces.Server{
@@ -53,7 +53,7 @@ func main() {
 
 	go func() {
 		if err := s.Serve(list); err != nil {
-			log.Fatalf("failed to serve: %v", err)
+			log.Printf("failed to serve: %v", err)
 		}
 	}()
 

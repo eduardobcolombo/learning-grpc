@@ -34,5 +34,5 @@ func (s *Repositories) Close() error {
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.Alias{}, &entity.Coordinate{}, &entity.Port{}, &entity.Region{}, &entity.Unloc{})
+	return s.db.AutoMigrate(&entity.Port{}, &entity.Alias{}, &entity.Coordinate{}, &entity.Region{}, &entity.Unloc{})
 }

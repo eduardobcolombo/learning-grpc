@@ -20,7 +20,6 @@ func Initialize() {
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	// e.readjsonFile("../../ports.json")
 	e.GetGRPC()
 	router := mux.NewRouter()
 	e.GetRoutes(router)
@@ -51,7 +50,7 @@ func Initialize() {
 	defer e.cc.Close()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Error trying to shutting down: %s", err)
+		log.Printf("Error trying to shutting down: %s", err)
 	}
 	log.Println("shutting down")
 	os.Exit(0)

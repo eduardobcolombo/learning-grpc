@@ -23,7 +23,7 @@ func (e *Environment) Response(w http.ResponseWriter, status int, payload interf
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, err = w.Write([]byte(err.Error())); err != nil {
-			log.Fatalf("Error trying to write the error response body: %s ", err)
+			log.Printf("Error trying to write the error response body: %s ", err)
 		}
 		return
 	}
@@ -31,7 +31,7 @@ func (e *Environment) Response(w http.ResponseWriter, status int, payload interf
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if _, err = w.Write([]byte(response)); err != nil {
-		log.Fatalf("Error trying to write the response body: %s ", err)
+		log.Printf("Error trying to write the response body: %s ", err)
 	}
 }
 
@@ -45,7 +45,7 @@ func (e *Environment) GetGRPC() error {
 		cFile := "ADD_THE_CERTIFICATE_PATH_HERE"
 		crds, err := credentials.NewClientTLSFromFile(cFile, "")
 		if err != nil {
-			log.Fatalf("Error loading certificate: %v", err)
+			log.Printf("Error loading certificate: %v", err)
 			return err
 		}
 		opts = grpc.WithTransportCredentials(crds)
@@ -53,7 +53,7 @@ func (e *Environment) GetGRPC() error {
 
 	cc, err := grpc.Dial(address, opts)
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Printf("did not connect: %v", err)
 		return err
 	}
 	e.psc = portpb.NewPortServiceClient(cc)
