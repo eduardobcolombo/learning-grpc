@@ -25,9 +25,9 @@ func (e *Environment) RetrievePorts(w http.ResponseWriter, r *http.Request) {
 
 func (e *Environment) UpdatePorts(w http.ResponseWriter, r *http.Request) {
 	// TODO: Read the file from upload or URL if it is the case
-	fname := "../ports.json"
-	fmt.Printf("Importing the file: %s\n\n", fname)
-	msg, err := e.updatePortsOnServer(fname)
+	fileName := "../ports.json"
+	fmt.Printf("Importing the file: %s\n\n", fileName)
+	msg, err := e.UpdatePortsOnServer(fileName)
 	if err != nil {
 		log.Printf("Error while updating ports on server: [%v]", err)
 		e.Response(w, http.StatusInternalServerError, err)
@@ -59,7 +59,7 @@ func (e *Environment) retrievePortsFromServer() (ports []*portpb.Port, err error
 	return ports, nil
 }
 
-func (e *Environment) updatePortsOnServer(fileName string) (string, error) {
+func (e *Environment) UpdatePortsOnServer(fileName string) (string, error) {
 
 	f, err := os.Open(fileName)
 	if err != nil {

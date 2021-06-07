@@ -44,3 +44,12 @@ build_c:
 		golang:1.16 \
 		go build -o bin/client.bin main.go		
 
+
+test_c:
+	@echo "-> Testing Client"
+	@cd client/api; \
+	export HOST=$(GRPC_HOST); \
+	export PORT=$(GRPC_PORT); \
+	export API_PORT=$(API_PORT); \
+	go test -v -cover
+
