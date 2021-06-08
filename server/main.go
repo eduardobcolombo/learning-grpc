@@ -39,7 +39,7 @@ func main() {
 		}
 		opts = append(opts, grpc.Creds(crds))
 	}
-	services, err := initDB()
+	services, err := InitDB()
 	if err != nil {
 		log.Printf("Error initializating the DB: %v", err)
 		return
@@ -71,7 +71,7 @@ func main() {
 	os.Exit(0)
 }
 
-func initDB() (services *persistence.Repositories, err error) {
+func InitDB() (services *persistence.Repositories, err error) {
 	host := os.Getenv("DB_HOST")
 	password := os.Getenv("DB_PASSWORD")
 	user := os.Getenv("DB_USER")

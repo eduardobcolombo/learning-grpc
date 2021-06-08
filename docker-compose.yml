@@ -41,7 +41,7 @@ services:
           memory: 200M
         reservations:
           memory: 20M
-    depends_on: [db, server]  
+    depends_on: [db, go-server]  
     ports: 
       - 8888:8888
     networks: 
@@ -56,7 +56,7 @@ services:
     ports:
       - 5432:5432      
     networks: 
-      - grpc-network      
+      - grpc-network     
 
   pgadmin:
     image: dpage/pgadmin4
