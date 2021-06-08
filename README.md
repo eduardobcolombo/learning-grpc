@@ -27,3 +27,20 @@ You can test if it is working firing some curls like below:
 `$ make build_s` will build the server go package and export it to server/bin folder
 
 `$ make build_c` will build the client go package and export it to client/bin folder
+
+`$ make test_c` will run the client test suite
+
+`$ make test_s` will run the server test suite
+
+## Next steps:
+
+The ports.json file does not have enough data to have an unique identifier like ID or UUID 
+or something like this.
+
+Figure out a way to identify ports and allow it to be updated instead of just inserting.
+
+Add more tests
+
+Add more grpc status messages through the client server communication using codes and status from the packages
+`"google.golang.org/grpc/codes"`
+`"google.golang.org/grpc/status"`

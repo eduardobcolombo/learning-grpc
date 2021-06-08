@@ -52,7 +52,7 @@ func (e *Environment) retrievePortsFromServer() (ports []*portpb.Port, err error
 		}
 		if err != nil {
 			log.Printf("Error receiving data from server: %v", err)
-			return ports, nil
+			return ports, err
 		}
 		ports = append(ports, res.GetPort())
 	}
