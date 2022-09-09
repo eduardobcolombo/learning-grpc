@@ -1,21 +1,37 @@
-FROM golang:1.16 as go-client
+FROM golang:1.16 as client-builder
 
-ARG LOCAL_PATH=/app
-WORKDIR ${LOCAL_PATH}
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+
+WORKDIR /app
 COPY . .
-WORKDIR ${LOCAL_PATH}/client
-RUN go mod download
-RUN go build -o client-app .
+RUN go build -o /client-app /app/cmd/client/main.go
 
-CMD ["/app/client/client-app"]
+# CMD ["/client-app"]
 
-FROM golang:1.16 as go-server
+FROM golang:1.16 as server-builder
 
-ARG LOCAL_PATH=/app
-WORKDIR ${LOCAL_PATH}
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+
+WORKDIR /app
 COPY . .
-WORKDIR ${LOCAL_PATH}/server
-RUN go mod download
-RUN go build -o server-app .
+RUN go build -o /server-app /app/cmd/server/main.go
 
-CMD ["/app/server/server-app"]
+# CMD ["/server-app"]
+
+
+FROM scratch as client
+
+COPY --from=client-builder /client-app /svc
+
+EXPOSE 8000
+CMD ["/svc"]
+
+
+FROM scratch as server
+
+COPY --from=server-builder /server-app /svc
+
+EXPOSE 8000
+CMD ["/svc"]

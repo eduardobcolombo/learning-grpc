@@ -2,18 +2,21 @@ version: '3'
 
 services:
 
-  go-server:
+  server:
     build:
       context: .
       dockerfile: Dockerfile
-      target: go-server
-    environment: 
-      PORT: 50051
-      DB_HOST: db
-      DB_PASSWORD: passwd
-      DB_USER: user
-      DB_NAME: db
-      DB_PORT: 5432
+      target: server
+    environment:
+      - GRPC_HOST=$GRPC_HOST
+      - GRPC_PORT=$GRPC_PORT
+      - DB_HOST=$DB_HOST
+      - DB_PASSWORD=$DB_PASSWORD
+      - DB_USER=$DB_USER
+      - DB_NAME=$DB_NAME
+      - DB_PORT=$DB_PORT
+    ports: 
+      - "50053:50053"      
 
     # deploy:
     #   resources:
@@ -21,40 +24,45 @@ services:
     #       memory: 200M
     #     reservations:
     #       memory: 20M
-    depends_on: [db]
+    depends_on:
+      - db
+    restart: on-failure      
     networks: 
       - grpc-network
 
-  go-client:
+  client:
     build:
       context: .
       dockerfile: Dockerfile
-      target: go-client
+      target: client
     environment: 
-      HOST: go-server
-      PORT: 50051
-      API_PORT: 8888
-
+      GRPC_HOST: $GRPC_HOST
+      GRPC_PORT: $GRPC_PORT
+      API_PORT: $API_PORT
+    volumes:
+      - ./data:/data
     deploy:
       resources:
         limits:
           memory: 200M
         reservations:
           memory: 20M
-    depends_on: [db, go-server]  
+    depends_on: 
+      - server
+    restart: on-failure      
     ports: 
-      - 8888:8888
+      - "8888:8888"
     networks: 
       - grpc-network
 
   db:
     image: postgres
     environment:
-      POSTGRES_PASSWORD: passwd
-      POSTGRES_USER: user
-      POSTGRES_DB: db
+      POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_USER: $DB_USER
+      POSTGRES_DB: $DB_NAME
     ports:
-      - 5432:5432      
+      - "5432:5432"
     networks: 
       - grpc-network     
 
@@ -69,6 +77,9 @@ services:
     networks: 
       - grpc-network     
  
+volumes:
+  data:
+
 networks: 
   grpc-network:
     driver: bridge

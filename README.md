@@ -20,17 +20,15 @@ You can test if it is working firing some curls like below:
 
 `$ make down` will put the docker-composer down
 
-`$ make run_s` will run the local grpc server
+`$ make run-server` will run the local grpc server
 
-`$ make run_c` will run the local grpc client to send message to the server
+`$ make run-client` will run the local grpc client to send message to the server
 
-`$ make build_s` will build the server go package and export it to server/bin folder
+`$ make build-server` will build the server go package and export it to server/bin folder
 
-`$ make build_c` will build the client go package and export it to client/bin folder
+`$ make build-client` will build the client go package and export it to client/bin folder
 
-`$ make test_c` will run the client test suite
-
-`$ make test_s` will run the server test suite
+`$ make test` will run the test suite
 
 ## Next steps:
 

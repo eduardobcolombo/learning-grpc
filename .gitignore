@@ -9,3 +9,7 @@ Thumbs.db
 # binary files
 server/bin/server.bin
 client/bin/client.bin
+bin/client.bin
+bin/server.bin
+
+.vscode
