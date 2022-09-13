@@ -5,7 +5,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/Dockerfile.server
       target: server
     environment:
       - GRPC_HOST=$GRPC_HOST
@@ -33,7 +33,7 @@ services:
   client:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/Dockerfile.client
       target: client
     environment: 
       GRPC_HOST: $GRPC_HOST
@@ -55,7 +55,7 @@ services:
     networks: 
       - grpc-network
 
-  db:
+  postgres:
     image: postgres
     environment:
       POSTGRES_PASSWORD: $DB_PASSWORD

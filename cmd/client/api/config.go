@@ -24,7 +24,6 @@ func GRPCInit(cfg *Config) (*grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cfg.GRPCHost = "server"
 	address := cfg.GRPCHost + ":" + cfg.GRPCPort
 	fmt.Println("Starting client GRPC connection ", address)
 

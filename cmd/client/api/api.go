@@ -43,6 +43,9 @@ func (api *API) routes(core CoreConfig, cfg *Config) {
 
 	api.router.HandleFunc(ver+"/ports", portHandler.RetrievePorts).Methods(http.MethodGet, http.MethodOptions)
 	api.router.HandleFunc(ver+"/ports", portHandler.UpdatePorts).Methods(http.MethodPost, http.MethodOptions)
+
+	api.router.HandleFunc("/debug/liveness", liveness)
+	api.router.HandleFunc("/debug/readiness", readiness)
 }
 
 func (api *API) mid(cfg *Config) {
@@ -107,4 +110,16 @@ func Initialize(log *zap.SugaredLogger) int {
 
 	return 0
 
+}
+
+func liveness(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Alive")
+	w.WriteHeader(200)
+	w.Write([]byte("liveness"))
+}
+
+func readiness(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Ready")
+	w.WriteHeader(200)
+	w.Write([]byte("readiness"))
 }
