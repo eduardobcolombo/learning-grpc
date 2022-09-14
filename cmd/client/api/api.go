@@ -113,13 +113,11 @@ func Initialize(log *zap.SugaredLogger) int {
 }
 
 func liveness(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Alive")
 	w.WriteHeader(200)
 	w.Write([]byte("liveness"))
 }
 
 func readiness(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Ready")
 	w.WriteHeader(200)
 	w.Write([]byte("readiness"))
 }

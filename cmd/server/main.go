@@ -29,15 +29,15 @@ type Config struct {
 }
 
 type GRPC struct {
-	Host string `envconfig:"GRPC_HOST"`
-	Port string `envconfig:"GRPC_PORT"`
+	Host string `envconfig:"GRPC_HOST" default:"0.0.0.0"`
+	Port string `envconfig:"GRPC_PORT" default:"50053"`
 }
 type DB struct {
-	Host     string `envconfig:"DB_HOST"`
-	Password string `envconfig:"DB_PASSWORD"`
-	User     string `envconfig:"DB_USER"`
-	Name     string `envconfig:"DB_NAME"`
-	Port     string `envconfig:"DB_PORT"`
+	Host     string `envconfig:"DB_HOST" default:"postgres"`
+	Password string `envconfig:"DB_PASSWORD" default:"passwd"`
+	User     string `envconfig:"DB_USER" default:"user"`
+	Name     string `envconfig:"DB_NAME" default:"db"`
+	Port     string `envconfig:"DB_PORT" default:"5432"`
 }
 
 func run() int {

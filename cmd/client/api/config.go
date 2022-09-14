@@ -15,9 +15,9 @@ import (
 type Config struct {
 	tls      bool
 	psc      portpb.PortServiceClient
-	GRPCHost string `envconfig:"GRPC_HOST"`
-	GRPCPort string `envconfig:"GRPC_PORT"`
-	APIPort  string `envconfig:"API_PORT"`
+	GRPCHost string `envconfig:"GRPC_HOST" default:"grpc-server.grpc"`
+	GRPCPort string `envconfig:"GRPC_PORT" default:"50053"`
+	APIPort  string `envconfig:"API_PORT" default:"8888"`
 }
 
 func GRPCInit(cfg *Config) (*grpc.ClientConn, error) {
