@@ -13,3 +13,8 @@ bin/client.bin
 bin/server.bin
 
 .vscode
+deploy/client.env
+deploy/docker-local.env
+deploy/server.env
+k8s/client-secrets.yaml
+k8s/server-secrets.yaml

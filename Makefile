@@ -139,7 +139,7 @@ up:
 	@docker-compose \
 	-f docker-compose.yml \
 	--env-file ./deploy/docker-local.env \
-	up --force-recreate -d
+	up --force-recreate --build -d
 .PHONY: up
 
 ## Remove all the created containers based on the docker-compose.yaml.

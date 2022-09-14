@@ -1,0 +1,11 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-server
+  namespace: grpc
+spec:
+  podSelector:
+    matchLabels:
+      app: grpc-server
+  ingress:
+  - {}

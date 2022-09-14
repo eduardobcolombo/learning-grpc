@@ -51,7 +51,6 @@ func run() int {
 		return 1
 	}
 
-	cfg.GRPC.Host = "localhost"
 	uri := cfg.GRPC.Host + ":" + cfg.GRPC.Port
 	fmt.Printf("-----> %s\n", uri)
 	list, err := net.Listen("tcp", uri)
