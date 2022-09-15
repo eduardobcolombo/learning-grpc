@@ -20,6 +20,11 @@ spec:
         name: server
         ports:
           - containerPort: 50053
+        resources:
+          requests:
+            memory: 64Mi
+          limits:
+            memory: 256Mi          
         envFrom:
           - secretRef:
               name: server-secrets

@@ -18,6 +18,11 @@ spec:
       containers:
       - image: eduardobcolombo/client:1.0
         name: client
+        resources:
+          requests:
+            memory: 64Mi
+          limits:
+            memory: 256Mi          
         envFrom:
           - secretRef:
               name: client-secrets                
