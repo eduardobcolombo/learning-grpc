@@ -69,7 +69,7 @@ build-client-bin:
 ### KinD - Kubernetes in Docker section.
 ##################
 ## Shortcut to init KinD with the images.
-kind-init: kind-create kind-config build-img kind-load
+kind-init: kind-create kind-config build-img kind-load kind-apply kind-apply-secrets
 .PHONY: kind-init
 
 ## Creates a KinD cluster locally.
@@ -206,3 +206,14 @@ test:
 	go test ./cmd/... -v -cover -count=1	
 	go test ./internal/... -v -cover -count=1	
 .PHONY: test
+
+
+# Send the ports.json file to the client.
+send: 
+	@curl -v -F file=@data/ports.json http://localhost:8888/v1/ports
+.PHONY: send
+
+# Send the ports.json file to the client.
+get: 
+	@curl http://localhost:8888/v1/ports -X GET
+.PHONY: get

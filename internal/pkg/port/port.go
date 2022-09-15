@@ -89,8 +89,6 @@ func (c Core) UpdatePortsOnServer(fileName string) (string, error) {
 			}
 
 			count += 1
-			c.log.Errorf("Sent", count)
-
 		}
 	}
 	res, err := stream.CloseAndRecv()
