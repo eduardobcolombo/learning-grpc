@@ -8,7 +8,7 @@ import (
 type Config struct {
 	tls      bool
 	psc      portpb.PortServiceClient
-	GRPCHost string `envconfig:"GRPC_HOST" default:"grpc-server.grpc"`
+	GRPCHost string `envconfig:"GRPC_HOST" default:"server.grpc"`
 	GRPCPort string `envconfig:"GRPC_PORT" default:"50053"`
 	APIPort  string `envconfig:"API_PORT" default:"8888"`
 }

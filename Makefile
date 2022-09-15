@@ -12,7 +12,7 @@ DB_NAME=db
 DB_PORT=5432
 
 ## Docker image name
-IMG := eduardobcolombo/grpc
+IMG := eduardobcolombo/
 VERSION := 1.0 # $(shell git rev-parse --short HEAD)
 CLUSTER := grpc-cluster
 NAMESPACE := grpc
@@ -27,7 +27,7 @@ build-img: build-server-img build-client-img
 build-server-img:
 	@docker build \
 	-f ./docker/Dockerfile.server \
-	-t $(IMG)-server:$(VERSION) \
+	-t $(IMG)server:$(VERSION) \
 	--build-arg BUILD_REF=$(VERSION) \
 	--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 	.
@@ -37,7 +37,7 @@ build-server-img:
 build-client-img:
 	@docker build \
 	-f ./docker/Dockerfile.client \
-	-t $(IMG)-client:$(VERSION) \
+	-t $(IMG)client:$(VERSION) \
 	--build-arg BUILD_REF=$(VERSION) \
 	--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 	.
@@ -98,8 +98,8 @@ kind-config:
 
 ## Load docker built images to the KinD cluster.
 kind-load:
-	@kind load docker-image $(IMG)-server:$(VERSION) --name $(CLUSTER)
-	@kind load docker-image $(IMG)-client:$(VERSION) --name $(CLUSTER)
+	@kind load docker-image $(IMG)server:$(VERSION) --name $(CLUSTER)
+	@kind load docker-image $(IMG)client:$(VERSION) --name $(CLUSTER)
 .PHONY: kind-load
 
 ## Apply the k8s folder with yaml files to the cluster.
@@ -207,6 +207,9 @@ test:
 	go test ./internal/... -v -cover -count=1	
 .PHONY: test
 
+expose:
+	@kubectl port-forward service/client 8888
+.PHONY: expose
 
 # Send the ports.json file to the client.
 send: 

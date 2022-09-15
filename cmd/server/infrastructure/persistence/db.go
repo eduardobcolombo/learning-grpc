@@ -9,6 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type DB struct {
+	Host     string `envconfig:"DB_HOST" default:"postgres"`
+	Password string `envconfig:"DB_PASSWORD" default:"passwd"`
+	User     string `envconfig:"DB_USER" default:"user"`
+	Name     string `envconfig:"DB_NAME" default:"db"`
+	Port     string `envconfig:"DB_PORT" default:"5432"`
+}
+
 type Repositories struct {
 	Port repository.PortRepository
 	db   *gorm.DB

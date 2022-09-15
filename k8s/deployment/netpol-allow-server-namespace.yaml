@@ -6,6 +6,6 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: grpc-server
+      app: server
   ingress:
   - {}

@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,7 +25,7 @@ func Initialize(log *zap.SugaredLogger) int {
 		return 1
 	}
 
-	grpcClientConn, err := grpcInit(cfg)
+	grpcClientConn, err := grpcInit(cfg, log)
 	if err != nil {
 		log.Error(err)
 		return 1
@@ -51,7 +49,7 @@ func Initialize(log *zap.SugaredLogger) int {
 		Handler:      api.Handler(),
 	}
 
-	fmt.Println("Running client api at port:", cfg.APIPort)
+	log.Infof("Running client api at port:", cfg.APIPort)
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
 			log.Error(err)
@@ -76,12 +74,12 @@ func Initialize(log *zap.SugaredLogger) int {
 
 }
 
-func grpcInit(cfg *Config) (*grpc.ClientConn, error) {
+func grpcInit(cfg *Config, log *zap.SugaredLogger) (*grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	address := cfg.GRPCHost + ":" + cfg.GRPCPort
-	fmt.Println("Starting client GRPC connection ", address)
+	log.Infof("Starting client GRPC connection ", address)
 
 	opts := []grpc.DialOption{
 		grpc.WithBlock(),
@@ -93,7 +91,7 @@ func grpcInit(cfg *Config) (*grpc.ClientConn, error) {
 		cFile := "ADD_THE_CERTIFICATE_PATH_HERE"
 		crds, err := credentials.NewClientTLSFromFile(cFile, "")
 		if err != nil {
-			log.Printf("Error loading certificate: %v", err)
+			log.Error("Error loading certificate: %v", err)
 			return nil, err
 		}
 		opts = append(opts, grpc.WithTransportCredentials(crds))
@@ -101,7 +99,7 @@ func grpcInit(cfg *Config) (*grpc.ClientConn, error) {
 
 	cc, err := grpc.DialContext(ctx, address, opts...)
 	if err != nil {
-		log.Printf("did not connect: %s %v", address, err)
+		log.Error("did not connect: %s %v", address, err)
 		return nil, err
 	}
 
