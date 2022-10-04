@@ -5,16 +5,17 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// NewLogger will start and return a zap logger
 func NewLogger(service string) (*zap.SugaredLogger, error) {
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stdout"}
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	config.DisableStacktrace = true
-	config.InitialFields = map[string]interface{}{
+	cfg := zap.NewProductionConfig()
+	cfg.OutputPaths = []string{"stdout"}
+	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	cfg.DisableStacktrace = true
+	cfg.InitialFields = map[string]interface{}{
 		"service": service,
 	}
 
-	log, err := config.Build()
+	log, err := cfg.Build()
 	if err != nil {
 		return nil, err
 	}

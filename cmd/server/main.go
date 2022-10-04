@@ -6,8 +6,10 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/domain/entity"
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/infrastructure/persistence"
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/interfaces"
+	"github.com/eduardobcolombo/learning-grpc/internal/pkg/db"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/foundation"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/portpb"
 	"github.com/kelseyhightower/envconfig"
@@ -33,8 +35,8 @@ func main() {
 }
 
 type Config struct {
-	GRPC GRPC
-	DB   persistence.DB
+	GRPC     GRPC
+	DBConfig *db.DBConfig
 }
 
 type GRPC struct {
@@ -74,14 +76,25 @@ func run(log *zap.SugaredLogger) int {
 		opts = append(opts, grpc.Creds(crds))
 	}
 
-	services, err := InitDB(&cfg.DB)
+	pg, err := db.New(cfg.DBConfig)
 	if err != nil {
-		log.Error("Error initializating the DB: %v", err)
+		log.Error("error initializating the DB: %v", err)
+		return 1
+	}
+
+	if err := pg.Automigrate(&entity.Port{}, &entity.Alias{}, &entity.Coordinate{}, &entity.Region{}, &entity.Unloc{}); err != nil {
+		log.Error("error running migrations: %v", err)
+		return 1
+	}
+
+	repositories, err := persistence.New(pg)
+	if err != nil {
+		log.Error("error creating the persistence: %v", err)
 		return 1
 	}
 
 	srv := interfaces.Server{
-		Services: services,
+		Services: repositories,
 	}
 
 	s := grpc.NewServer(opts...)
@@ -103,27 +116,8 @@ func run(log *zap.SugaredLogger) int {
 	log.Info("Closing the listener")
 	list.Close()
 	log.Info("Closing DB")
-	services.Close()
+	srv.Services.Close()
 	log.Info("Shutdown")
 
 	return 0
-}
-
-func InitDB(cfg *persistence.DB) (services *persistence.Repositories, err error) {
-	host := cfg.Host
-	password := cfg.Password
-	user := cfg.User
-	dbname := cfg.Name
-	dbport := cfg.Port
-
-	services, err = persistence.NewRepositories(user, password, dbport, host, dbname)
-	if err != nil {
-		return services, err
-	}
-
-	if err := services.Automigrate(); err != nil {
-		return services, err
-	}
-
-	return services, nil
 }

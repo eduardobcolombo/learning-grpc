@@ -7,7 +7,9 @@ import (
 	"net"
 	"testing"
 
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/infrastructure/persistence"
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/interfaces"
+	"github.com/eduardobcolombo/learning-grpc/internal/pkg/db"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/portpb"
 	"github.com/kelseyhightower/envconfig"
 	"google.golang.org/grpc"
@@ -44,13 +46,18 @@ func dialer(t *testing.T) func(context.Context, string) (net.Conn, error) {
 		log.Fatal(err)
 	}
 
-	services, err := InitDB(&cfg.DB)
+	pg, err := db.New(cfg.DBConfig)
 	if err != nil {
 		log.Panicf("Error initializating the DB: %v", err)
 	}
 
+	repositories, err := persistence.New(pg)
+	if err != nil {
+		log.Panicf("error creating the persistence: %v", err)
+	}
+
 	srv := interfaces.Server{
-		Services: services,
+		Services: repositories,
 	}
 
 	s := grpc.NewServer()
@@ -65,7 +72,7 @@ func dialer(t *testing.T) func(context.Context, string) (net.Conn, error) {
 	t.Cleanup(func() {
 		s.Stop()
 		list.Close()
-		services.Close()
+		srv.Services.Close()
 	})
 	return func(context.Context, string) (net.Conn, error) {
 		return list.Dial()

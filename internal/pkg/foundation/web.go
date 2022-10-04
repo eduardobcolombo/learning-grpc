@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// Response will handle the http responses
 func Response(w http.ResponseWriter, status int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {

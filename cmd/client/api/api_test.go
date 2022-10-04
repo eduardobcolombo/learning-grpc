@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/eduardobcolombo/learning-grpc/cmd/client/core/port"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/foundation"
-	"github.com/eduardobcolombo/learning-grpc/internal/pkg/port"
 	"go.uber.org/zap"
 )
 
@@ -28,7 +28,7 @@ var testLog = func() *zap.SugaredLogger {
 	return log
 }()
 var core = CoreConfig{
-	Port: port.NewCore(testLog, cfg.psc),
+	Port: port.NewCore(testLog, cfg.PSC),
 }
 var rt = ServerWithMiddlewares(core, cfg)
 var assertCorrectMessage = func(t *testing.T, got, want interface{}) {
@@ -57,11 +57,11 @@ func GetEnvTest() *Config {
 }
 
 func ServerWithMiddlewares(core CoreConfig, cfg *Config) http.Handler {
-	api := newAPI()
-	api.routes(core, cfg)
-	api.mid(cfg)
+	a := New()
+	a.Routes(core, cfg)
+	a.Mid(cfg)
 
-	return api.router
+	return a.router
 }
 
 func MakeRequest(r ReqTest) (res *httptest.ResponseRecorder) {

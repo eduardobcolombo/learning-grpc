@@ -22,6 +22,7 @@ func NewCore(log *zap.SugaredLogger, psc portpb.PortServiceClient) Core {
 	return Core{log: log, psc: psc}
 }
 
+// RetrievePortsFromServer call GRPC server to retrieve the ports list
 func (c Core) RetrievePortsFromServer() (ports []*portpb.Port, err error) {
 	req := &portpb.ListPortsRequest{}
 	stream, err := c.psc.PortsList(context.Background(), req)
@@ -44,6 +45,7 @@ func (c Core) RetrievePortsFromServer() (ports []*portpb.Port, err error) {
 	return ports, nil
 }
 
+// UpdatePortsOnServer send the JSON file to the server using GRPC
 func (c Core) UpdatePortsOnServer(fileName string) (string, error) {
 
 	f, err := os.Open(fileName)
@@ -99,6 +101,7 @@ func (c Core) UpdatePortsOnServer(fileName string) (string, error) {
 	return res.GetResult(), nil
 }
 
+// fillPortpbWithJSON parse the Port with JSON to PB type
 func fillPortpbWithJSON(log *zap.SugaredLogger, jsonbody []byte) (req *portpb.PortRequest, err error) {
 
 	dataPort := portRequest{}
@@ -132,6 +135,7 @@ func fillPortpbWithJSON(log *zap.SugaredLogger, jsonbody []byte) (req *portpb.Po
 
 }
 
+// should not be here, it is CORE
 type portRequest struct {
 	Name        string    `json:"name"`
 	Coordinates []float32 `json:"coordinates"`

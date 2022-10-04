@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"fmt"
@@ -6,16 +6,17 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/eduardobcolombo/learning-grpc/cmd/client/core/port"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/foundation"
-	"github.com/eduardobcolombo/learning-grpc/internal/pkg/port"
 )
 
 type Handler struct {
-	core port.Core
+	Core port.Core
 }
 
+// RetrievePorts will retrieve Ports using Core
 func (h Handler) RetrievePorts(w http.ResponseWriter, r *http.Request) {
-	ports, err := h.core.RetrievePortsFromServer()
+	ports, err := h.Core.RetrievePortsFromServer()
 	if err != nil {
 		foundation.Response(w, http.StatusInternalServerError, err)
 	}
@@ -23,8 +24,8 @@ func (h Handler) RetrievePorts(w http.ResponseWriter, r *http.Request) {
 	foundation.Response(w, http.StatusOK, ports)
 }
 
+// UpdatePorts will update Ports using Core
 func (h Handler) UpdatePorts(w http.ResponseWriter, r *http.Request) {
-	// TODO: Read the file from upload or URL if it is the case
 	// fileName := "data/ports.json"
 	fileName, err := upload(w, r)
 	if err != nil {
@@ -33,7 +34,7 @@ func (h Handler) UpdatePorts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("Importing the file: %s\n\n", fileName)
-	msg, err := h.core.UpdatePortsOnServer(fileName)
+	msg, err := h.Core.UpdatePortsOnServer(fileName)
 	if err != nil {
 		foundation.Response(w, http.StatusInternalServerError, err)
 		return
@@ -44,12 +45,13 @@ func (h Handler) UpdatePorts(w http.ResponseWriter, r *http.Request) {
 	foundation.Response(w, http.StatusOK, msg)
 }
 
+// upload will do the file upload when received from request
 func upload(w http.ResponseWriter, r *http.Request) (string, error) {
 	fmt.Println("File Upload Endpoint Hit")
 
-	// Parse our multipart form, 10 << 20 specifies a maximum
-	// upload of 10 MB files.
-	r.ParseMultipartForm(10 << 20)
+	// Parse our multipart form, 10 << 30 specifies a maximum
+	// upload of 10 GB files.
+	r.ParseMultipartForm(10 << 30)
 	file, _, err := r.FormFile("file")
 	if err != nil {
 		return "", err
