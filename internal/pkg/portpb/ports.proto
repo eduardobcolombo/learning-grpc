@@ -35,17 +35,17 @@ message PortResponse {
     string result = 1;
 }
 
-message ListPortsRequest {
+message RetrievePortsRequest {
 
 }
 
-message ListPortsResponse {
+message RetrievePortsResponse {
     Port port = 1;
 }
 
 service PortService{
     // Client Streaming
-    rpc PortsUpdate (stream PortRequest) returns (PortResponse) {};
+    rpc Update (stream PortRequest) returns (PortResponse) {};
     // Server Streaming
-    rpc PortsList(ListPortsRequest) returns (stream ListPortsResponse) {};
+    rpc Retrieve(RetrievePortsRequest) returns (stream RetrievePortsResponse) {};
 }

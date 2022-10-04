@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
-var testFileName = "../../../test/data/ports_test.json"
-var testFileName2Records = "../../../test/data/ports_test_2_records.json"
+// var testFileName = "../../../test/data/ports_test.json"
+// var testFileName2Records = "../../../test/data/ports_test_2_records.json"
 var cfg = GetEnvTest()
 
 // Construct the application logger.
@@ -31,18 +31,6 @@ var core = CoreConfig{
 	Port: port.NewCore(testLog, cfg.PSC),
 }
 var rt = ServerWithMiddlewares(core, cfg)
-var assertCorrectMessage = func(t *testing.T, got, want interface{}) {
-	t.Helper()
-	if got != want {
-		t.Errorf("got %s[%T] want %s[%T]", got, got, want, want)
-	}
-}
-var assertNil = func(t *testing.T, got interface{}) {
-	t.Helper()
-	if got != nil {
-		t.Errorf("got %q want nil", got)
-	}
-}
 
 type ReqTest struct {
 	Verb string

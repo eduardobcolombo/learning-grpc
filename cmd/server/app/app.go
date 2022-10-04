@@ -1,22 +1,23 @@
-package interfaces
+package app
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
 
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/domain/entity"
-	"github.com/eduardobcolombo/learning-grpc/cmd/server/infrastructure/persistence"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/handlers"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/portpb"
 )
 
 type Server struct {
 	portpb.PortServiceServer
-	Services *persistence.Repositories
+	Port handlers.Port
 }
 
-func (s *Server) PortsUpdate(stream portpb.PortService_PortsUpdateServer) error {
-	ports := NewPort(s.Services.Port)
+func (s *Server) Update(stream portpb.PortService_UpdateServer) error {
+	ctx := context.Background()
 
 	count := 0
 	for {
@@ -31,7 +32,7 @@ func (s *Server) PortsUpdate(stream portpb.PortService_PortsUpdateServer) error 
 			log.Printf("Error while reading client stream: %v", err)
 		}
 
-		if err := ports.SavePort(req); err != nil {
+		if err := s.Port.Save(ctx, req); err != nil {
 			log.Printf("Error while saving port stream: %v", err)
 		}
 
@@ -40,17 +41,17 @@ func (s *Server) PortsUpdate(stream portpb.PortService_PortsUpdateServer) error 
 
 }
 
-func (s *Server) PortsList(req *portpb.ListPortsRequest, stream portpb.PortService_PortsListServer) error {
-	ports := NewPort(s.Services.Port)
+func (s *Server) Retrieve(req *portpb.RetrievePortsRequest, stream portpb.PortService_RetrieveServer) error {
+	ctx := context.Background()
 
-	lPorts, err := ports.RetrievePorts()
+	data, err := s.Port.Retrieve(ctx)
 	if err != nil {
 		log.Printf("Error while reading client stream: %v", err)
 		return err
 	}
-	for _, p := range lPorts {
-		ppb := fillPortpbWithPort(p)
-		err = stream.Send(&portpb.ListPortsResponse{Port: ppb})
+	for _, p := range data {
+		ppb := toPortpb(p)
+		err = stream.Send(&portpb.RetrievePortsResponse{Port: ppb})
 		if err != nil {
 			log.Printf("Error while reading client stream loop: %v", err)
 			return nil
@@ -60,7 +61,7 @@ func (s *Server) PortsList(req *portpb.ListPortsRequest, stream portpb.PortServi
 	return nil
 }
 
-func fillPortpbWithPort(port *entity.Port) *portpb.Port {
+func toPortpb(port *entity.Port) *portpb.Port {
 	id := int32(port.ID)
 	return &portpb.Port{
 		Id:          id,

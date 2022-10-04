@@ -16,7 +16,7 @@ type Handler struct {
 
 // RetrievePorts will retrieve Ports using Core
 func (h Handler) RetrievePorts(w http.ResponseWriter, r *http.Request) {
-	ports, err := h.Core.RetrievePortsFromServer()
+	ports, err := h.Core.Retrieve()
 	if err != nil {
 		foundation.Response(w, http.StatusInternalServerError, err)
 	}
@@ -34,7 +34,7 @@ func (h Handler) UpdatePorts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("Importing the file: %s\n\n", fileName)
-	msg, err := h.Core.UpdatePortsOnServer(fileName)
+	msg, err := h.Core.Update(fileName)
 	if err != nil {
 		foundation.Response(w, http.StatusInternalServerError, err)
 		return

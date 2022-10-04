@@ -6,12 +6,13 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/app"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/core/port"
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/domain/entity"
-	"github.com/eduardobcolombo/learning-grpc/cmd/server/infrastructure/persistence"
-	"github.com/eduardobcolombo/learning-grpc/cmd/server/interfaces"
-	"github.com/eduardobcolombo/learning-grpc/internal/pkg/db"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/handlers"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/foundation"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/portpb"
+	"github.com/eduardobcolombo/learning-grpc/internal/pkg/sqlDB"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -36,7 +37,7 @@ func main() {
 
 type Config struct {
 	GRPC     GRPC
-	DBConfig *db.DBConfig
+	DBConfig *sqlDB.DBConfig
 }
 
 type GRPC struct {
@@ -76,7 +77,7 @@ func run(log *zap.SugaredLogger) int {
 		opts = append(opts, grpc.Creds(crds))
 	}
 
-	pg, err := db.New(cfg.DBConfig)
+	pg, err := sqlDB.New(cfg.DBConfig)
 	if err != nil {
 		log.Error("error initializating the DB: %v", err)
 		return 1
@@ -87,14 +88,8 @@ func run(log *zap.SugaredLogger) int {
 		return 1
 	}
 
-	repositories, err := persistence.New(pg)
-	if err != nil {
-		log.Error("error creating the persistence: %v", err)
-		return 1
-	}
-
-	srv := interfaces.Server{
-		Services: repositories,
+	srv := app.Server{
+		Port: handlers.NewPort(port.NewCore(pg)),
 	}
 
 	s := grpc.NewServer(opts...)
@@ -116,7 +111,7 @@ func run(log *zap.SugaredLogger) int {
 	log.Info("Closing the listener")
 	list.Close()
 	log.Info("Closing DB")
-	srv.Services.Close()
+	pg.Close()
 	log.Info("Shutdown")
 
 	return 0

@@ -7,10 +7,12 @@ import (
 	"net"
 	"testing"
 
-	"github.com/eduardobcolombo/learning-grpc/cmd/server/infrastructure/persistence"
-	"github.com/eduardobcolombo/learning-grpc/cmd/server/interfaces"
-	"github.com/eduardobcolombo/learning-grpc/internal/pkg/db"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/app"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/core/port"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/domain/entity"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/handlers"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/portpb"
+	"github.com/eduardobcolombo/learning-grpc/internal/pkg/sqlDB"
 	"github.com/kelseyhightower/envconfig"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -46,18 +48,20 @@ func dialer(t *testing.T) func(context.Context, string) (net.Conn, error) {
 		log.Fatal(err)
 	}
 
-	pg, err := db.New(cfg.DBConfig)
+	pg, err := sqlDB.New(cfg.DBConfig)
 	if err != nil {
 		log.Panicf("Error initializating the DB: %v", err)
 	}
 
-	repositories, err := persistence.New(pg)
-	if err != nil {
-		log.Panicf("error creating the persistence: %v", err)
+	if err := pg.Automigrate(&entity.Port{}, &entity.Alias{}, &entity.Coordinate{}, &entity.Region{}, &entity.Unloc{}); err != nil {
+		log.Panicf("error running migrations: %v", err)
 	}
 
-	srv := interfaces.Server{
-		Services: repositories,
+	corePort := port.NewCore(pg)
+	handlerPort := handlers.NewPort(corePort)
+
+	srv := app.Server{
+		Port: handlerPort,
 	}
 
 	s := grpc.NewServer()
@@ -72,7 +76,7 @@ func dialer(t *testing.T) func(context.Context, string) (net.Conn, error) {
 	t.Cleanup(func() {
 		s.Stop()
 		list.Close()
-		srv.Services.Close()
+		pg.Close()
 	})
 	return func(context.Context, string) (net.Conn, error) {
 		return list.Dial()
@@ -110,7 +114,7 @@ func TestPortsUpdate(t *testing.T) {
 			},
 		}
 
-		stream, err := client.PortsUpdate(ctx)
+		stream, err := client.Update(ctx)
 		assertNil(t, err)
 		err = stream.Send(request)
 		assertNil(t, err)
@@ -128,8 +132,8 @@ func TestPortsList(t *testing.T) {
 	t.Run("Retrieving the ports list", func(t *testing.T) {
 
 		var ports []*portpb.Port
-		req := &portpb.ListPortsRequest{}
-		stream, err := client.PortsList(ctx, req)
+		req := &portpb.RetrievePortsRequest{}
+		stream, err := client.Retrieve(ctx, req)
 		assertNil(t, err)
 		for {
 			res, err := stream.Recv()

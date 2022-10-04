@@ -1,24 +1,25 @@
-package interfaces
+package handlers
 
 import (
+	"context"
 	"log"
 
-	"github.com/eduardobcolombo/learning-grpc/cmd/server/application"
+	"github.com/eduardobcolombo/learning-grpc/cmd/server/core/port"
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/domain/entity"
 	"github.com/eduardobcolombo/learning-grpc/internal/pkg/portpb"
 )
 
 type Port struct {
-	portApp application.PortAppInterface
+	core port.Core
 }
 
-func NewPort(pApp application.PortAppInterface) *Port {
-	return &Port{
-		portApp: pApp,
+func NewPort(core port.Core) Port {
+	return Port{
+		core: core,
 	}
 }
 
-func (p *Port) SavePort(portReq *portpb.PortRequest) error {
+func (p *Port) Save(ctx context.Context, portReq *portpb.PortRequest) error {
 	port := entity.Port{}
 	port.City = portReq.GetPort().GetCity()
 	port.Country = portReq.GetPort().GetCountry()
@@ -53,19 +54,18 @@ func (p *Port) SavePort(portReq *portpb.PortRequest) error {
 
 	port.Code = portReq.GetPort().GetCode()
 
-	_, err := p.portApp.SavePort(&port)
-	if err != nil {
+	if err := p.core.Save(ctx, &port); err != nil {
 		log.Printf("Error %v", err)
 		return err
 	}
 	return nil
 }
 
-func (p *Port) RetrievePorts() (ports []*entity.Port, err error) {
-	ports, err = p.portApp.RetrievePorts()
+func (p *Port) Retrieve(ctx context.Context) (ports []*entity.Port, err error) {
+	ports, err = p.core.Retrieve(ctx)
 	if err != nil {
 
-		log.Printf("Error retrieving data from DB: %v", err)
+		log.Printf("Error retrieving data: %v", err)
 		return ports, err
 	}
 	return ports, nil

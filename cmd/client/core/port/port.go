@@ -22,12 +22,12 @@ func NewCore(log *zap.SugaredLogger, psc portpb.PortServiceClient) Core {
 	return Core{log: log, psc: psc}
 }
 
-// RetrievePortsFromServer call GRPC server to retrieve the ports list
-func (c Core) RetrievePortsFromServer() (ports []*portpb.Port, err error) {
-	req := &portpb.ListPortsRequest{}
-	stream, err := c.psc.PortsList(context.Background(), req)
+// Retrieve call GRPC server to retrieve the ports list
+func (c Core) Retrieve() (ports []*portpb.Port, err error) {
+	req := &portpb.RetrievePortsRequest{}
+	stream, err := c.psc.Retrieve(context.Background(), req)
 	if err != nil {
-		c.log.Errorf("error while calling retrievePortsFromServer: %v", err)
+		c.log.Errorf("error while calling Retrieve: %v", err)
 		return ports, err
 	}
 
@@ -45,17 +45,17 @@ func (c Core) RetrievePortsFromServer() (ports []*portpb.Port, err error) {
 	return ports, nil
 }
 
-// UpdatePortsOnServer send the JSON file to the server using GRPC
-func (c Core) UpdatePortsOnServer(fileName string) (string, error) {
+// Update send the JSON file to the server using GRPC
+func (c Core) Update(fileName string) (string, error) {
 
 	f, err := os.Open(fileName)
 	if err != nil {
 		c.log.Errorf("Error to read [file=%v]: %v", fileName, err.Error())
 	}
 	defer f.Close()
-	stream, err := c.psc.PortsUpdate(context.Background())
+	stream, err := c.psc.Update(context.Background())
 	if err != nil {
-		c.log.Errorf("error while calling PortsUpdate: %v", err)
+		c.log.Errorf("error while calling Update: %v", err)
 		return "", err
 	}
 
@@ -81,7 +81,7 @@ func (c Core) UpdatePortsOnServer(fileName string) (string, error) {
 				return "", err
 			}
 
-			filledPort, err := fillPortpbWithJSON(c.log, jsonbody)
+			filledPort, err := toPortRequest(c.log, jsonbody)
 			if err != nil {
 				c.log.Errorf("Error to read [file=%v]: %v", fileName, err.Error())
 			}
@@ -101,8 +101,8 @@ func (c Core) UpdatePortsOnServer(fileName string) (string, error) {
 	return res.GetResult(), nil
 }
 
-// fillPortpbWithJSON parse the Port with JSON to PB type
-func fillPortpbWithJSON(log *zap.SugaredLogger, jsonbody []byte) (req *portpb.PortRequest, err error) {
+// toPortRequest parse the Port with JSON to PB type
+func toPortRequest(log *zap.SugaredLogger, jsonbody []byte) (req *portpb.PortRequest, err error) {
 
 	dataPort := portRequest{}
 	if err := json.Unmarshal(jsonbody, &dataPort); err != nil {
