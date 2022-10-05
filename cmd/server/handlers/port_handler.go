@@ -38,8 +38,8 @@ func (p *Port) Save(ctx context.Context, portReq *portpb.PortRequest) error {
 	port.Regions = regions
 
 	coord := entity.Coordinate{}
-	coord.Lat = float64(portReq.GetPort().GetCoordinates().GetLat())
-	coord.Long = float64(portReq.GetPort().GetCoordinates().GetLong())
+	coord.Lat = portReq.GetPort().GetCoordinates().GetLat()
+	coord.Long = portReq.GetPort().GetCoordinates().GetLong()
 	port.Coordinates = coord
 
 	port.Province = portReq.GetPort().GetProvince()

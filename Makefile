@@ -124,8 +124,9 @@ kind-watch:
 	@watch kubectl get all --namespace $(NAMESPACE)
 .PHONY: kind-watch
 
+# Get a DB session
 db:
-	kubectl exec -it pod/postgres-5d8fd768d6-qbbt4 --namespace $(NAMESPACE) --cluster kind-$(CLUSTER) -- \
+	kubectl exec -it deploy/postgres --namespace $(NAMESPACE) --cluster kind-$(CLUSTER) -- \
 	psql -h $(DB_HOST) -U $(DB_USER) --password -p $(DB_PORT) $(DB_NAME)
 .PHONY: db
 
@@ -203,8 +204,8 @@ test:
 		   DB_NAME=$(DB_NAME) \
 		   DB_PORT=$(DB_PORT) \
 		   ; \
-	go test ./cmd/... -v -cover -count=1	
-	go test ./internal/... -v -cover -count=1	
+	go test ./cmd/... -v -race -cover -count=1	
+	go test ./internal/... -v -race -cover -count=1	
 .PHONY: test
 
 expose:

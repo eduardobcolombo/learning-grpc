@@ -4,31 +4,72 @@
 
 
 ## Protobuf
+
 To run the protobuf you can use the below command:
-```protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative portpb/ports.proto ```
+`$ make generate`
 
 ## Docker 
-In order to make things easy for devs, I created a make file to run docker commands, so fell free to check the flavours:
 
-`$ make generate` will generate the grpc files based on the protobuf messages
+In order to make things easy for devs, I created a make file to run docker commands, so fell free to check the flavours:
 
 `$ make up` will start the docker-composer with all instances (Db, Client and Server).
 You can test if it is working firing some curls like below:
 
-`curl http://localhost:8888/v1/ports -X POST` It will load all ports to the DB
-`curl http://localhost:8888/v1/ports -X GET` It will get all ports from DB
+`$ make send` It will load all ports to the DB
+`$ make get` It will get all ports from DB
 
 `$ make down` will put the docker-composer down
+
+## Kubernetes
+
+We are running it using KinD to provide a local cluster.
+
+`$ make kind-init` Shortcut to init KinD with the images.
+
+`$ make kind-watch` Monitoring pods with watch.
+
+`$ make db` Get a DB session.
+
+
+
+
+`$ make kind-create` Creates a KinD cluster locally.
+
+`$ make kind-apply-secrets` Apply secrets based on the .env file
+
+`$ make kind-config` Set the current cluster to the context and load env variables.
+
+`$ make kind-load` Load docker built images to the KinD cluster.
+
+`$ make kind-apply` Apply the k8s folder with yaml files to the cluster.
+
+`$ make kind-delete` Delete all resources hostedn in the ./k8s
+
+`$ make kind-clean` Delete the cluster.
+
+## Running locally
 
 `$ make run-server` will run the local grpc server
 
 `$ make run-client` will run the local grpc client to send message to the server
 
-`$ make build-server` will build the server go package and export it to server/bin folder
+## Builing locally binary
 
-`$ make build-client` will build the client go package and export it to client/bin folder
+`$ make build-server-bin` will build the server go package and export it to the bin folder
+
+`$ make build-client-bin` will build the client go package and export it to the bin folder
+
+## Running tests
 
 `$ make test` will run the test suite
+
+## Running lint
+
+`$ make lint` will run the linter
+
+## Useful tools
+
+`$ make expose` will run expose the api to access locally.
 
 ## Next steps:
 

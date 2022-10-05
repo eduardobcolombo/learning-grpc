@@ -19,8 +19,8 @@ message Port {
 }
 
 message Coordinates {
-    float lat = 1;
-    float long = 2;
+    double lat = 1;
+    double long = 2;
 }
 
 message Unlocs {

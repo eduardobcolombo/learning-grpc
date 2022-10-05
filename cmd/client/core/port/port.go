@@ -138,7 +138,7 @@ func toPortRequest(log *zap.SugaredLogger, jsonbody []byte) (req *portpb.PortReq
 // should not be here, it is CORE
 type portRequest struct {
 	Name        string    `json:"name"`
-	Coordinates []float32 `json:"coordinates"`
+	Coordinates []float64 `json:"coordinates"`
 	City        string    `json:"city"`
 	Province    string    `json:"province"`
 	Country     string    `json:"country"`
