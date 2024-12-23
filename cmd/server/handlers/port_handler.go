@@ -2,71 +2,112 @@ package handlers
 
 import (
 	"context"
-	"log"
+	"errors"
 
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/core/port"
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/domain/entity"
-	"github.com/eduardobcolombo/learning-grpc/internal/pkg/portpb"
+	"github.com/eduardobcolombo/learning-grpc/portpb"
 )
 
 type Port struct {
-	core port.Core
+	core *port.Core
 }
 
-func NewPort(core port.Core) Port {
-	return Port{
+func NewPort(core *port.Core) *Port {
+	return &Port{
 		core: core,
 	}
 }
 
-func (p *Port) Save(ctx context.Context, portReq *portpb.PortRequest) error {
-	port := entity.Port{}
-	port.City = portReq.GetPort().GetCity()
-	port.Country = portReq.GetPort().GetCountry()
-	alias := []entity.Alias{}
-	aliasReq := portReq.GetPort().GetAlias()
-	for _, al := range aliasReq {
-		alias = append(alias, entity.Alias{Alias: al})
+func (p *Port) Create(ctx context.Context, portReq *portpb.PortRequest) error {
+	port := entity.Port{
+		Name:      portReq.GetPort().GetName(),
+		City:      portReq.GetPort().GetCity(),
+		Country:   portReq.GetPort().GetCountry(),
+		Alias:     portReq.GetPort().GetAlias(),
+		Regions:   portReq.GetPort().GetRegions(),
+		Latitude:  portReq.GetPort().GetLatitude(),
+		Longitude: portReq.GetPort().GetLongitude(),
+		Province:  portReq.GetPort().GetProvince(),
+		Timezone:  portReq.GetPort().GetTimezone(),
+		Unlocs:    portReq.GetPort().GetUnlocs(),
+		Code:      portReq.GetPort().GetCode(),
 	}
-	port.Alias = alias
 
-	regions := []entity.Region{}
-	regionsReq := portReq.GetPort().GetRegions()
-	for _, reg := range regionsReq {
-		regions = append(regions, entity.Region{Region: reg})
-	}
-	port.Regions = regions
-
-	coord := entity.Coordinate{}
-	coord.Lat = portReq.GetPort().GetCoordinates().GetLat()
-	coord.Long = portReq.GetPort().GetCoordinates().GetLong()
-	port.Coordinates = coord
-
-	port.Province = portReq.GetPort().GetProvince()
-	port.Timezone = portReq.GetPort().GetTimezone()
-
-	unlocs := []entity.Unloc{}
-	unlocsReq := portReq.GetPort().GetUnlocs().GetUnloc()
-	for _, unl := range unlocsReq {
-		unlocs = append(unlocs, entity.Unloc{Unloc: unl})
-	}
-	port.Unlocs = unlocs
-
-	port.Code = portReq.GetPort().GetCode()
-
-	if err := p.core.Save(ctx, &port); err != nil {
-		log.Printf("Error %v", err)
+	if err := p.core.Create(ctx, port); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (p *Port) Retrieve(ctx context.Context) (ports []*entity.Port, err error) {
-	ports, err = p.core.Retrieve(ctx)
-	if err != nil {
+func (p *Port) Update(ctx context.Context, portReq *portpb.PortRequest) error {
+	port := entity.Port{
+		Name:      portReq.GetPort().GetName(),
+		City:      portReq.GetPort().GetCity(),
+		Country:   portReq.GetPort().GetCountry(),
+		Alias:     portReq.GetPort().GetAlias(),
+		Regions:   portReq.GetPort().GetRegions(),
+		Latitude:  portReq.GetPort().GetLatitude(),
+		Longitude: portReq.GetPort().GetLongitude(),
+		Province:  portReq.GetPort().GetProvince(),
+		Timezone:  portReq.GetPort().GetTimezone(),
+		Unlocs:    portReq.GetPort().GetUnlocs(),
+		Code:      portReq.GetPort().GetCode(),
+	}
 
-		log.Printf("Error retrieving data: %v", err)
+	// check if the resource exists
+	data, err := p.GetByUnloc(ctx, port.Unlocs)
+	if err != nil {
+		if errors.Is(err, entity.ErrPortNotFound) {
+			// if it does not exists, try to create it
+			return p.core.Create(ctx, port)
+		}
+		return err
+	}
+	// then update it
+	port.ID = data.ID
+	if err := p.core.Update(ctx, port); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Port) GetByID(ctx context.Context, id uint) (*entity.Port, error) {
+	port, err := p.core.GetByID(ctx, id)
+	if err != nil {
+		return port, err
+	}
+
+	return port, nil
+}
+
+func (p *Port) GetByUnloc(ctx context.Context, unloc string) (*entity.Port, error) {
+	port, err := p.core.GetByUnloc(ctx, unloc)
+	if err != nil {
+		return port, err
+	}
+
+	return port, nil
+}
+
+func (p *Port) GetAll(ctx context.Context) (ports []entity.Port, err error) {
+	ports, err = p.core.GetAll(ctx)
+	if err != nil {
 		return ports, err
 	}
+
 	return ports, nil
+}
+
+func (p *Port) Delete(ctx context.Context, portReq *portpb.PortIdRequest) error {
+
+	id := uint(portReq.GetId())
+
+	if err := p.core.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	return nil
 }

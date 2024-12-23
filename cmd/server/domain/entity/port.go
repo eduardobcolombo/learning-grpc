@@ -1,17 +1,31 @@
 package entity
 
-import "gorm.io/gorm"
+import (
+	"errors"
+	"time"
+)
+
+var (
+	ErrPortNotFound = errors.New("port not found")
+	ErrOnInsert     = errors.New("error on insert")
+	ErrOnUpdate     = errors.New("error on update")
+)
 
 type Port struct {
-	Name        string     `json:"name"`
-	City        string     `json:"city"`
-	Country     string     `json:"country"`
-	Alias       []Alias    `json:"alias"`
-	Regions     []Region   `json:"regions"`
-	Coordinates Coordinate `json:"coordinates"`
-	Province    string     `json:"province"`
-	Timezone    string     `json:"timezone"`
-	Unlocs      []Unloc    `json:"unlocs"`
-	Code        string     `json:"code"`
-	gorm.Model
+	ID        uint
+	Name      string
+	City      string
+	Country   string
+	Alias     string
+	Regions   string
+	Latitude  float64
+	Longitude float64
+	Province  string
+	Timezone  string
+	Unlocs    string
+	Code      string
+
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt *time.Time `db:"updated_at"`
+	DeletedAt *time.Time `db:"deleted_at"`
 }

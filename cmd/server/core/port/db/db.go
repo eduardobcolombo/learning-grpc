@@ -1,36 +1,66 @@
 package db
 
 import (
+	"context"
+	"errors"
+
 	"github.com/eduardobcolombo/learning-grpc/cmd/server/domain/entity"
-	"github.com/eduardobcolombo/learning-grpc/internal/pkg/sqlDB"
+	"gorm.io/gorm"
 )
 
 type Store struct {
-	sqlDB *sqlDB.DB
+	db *gorm.DB
 }
 
-func NewStore(sqlDB *sqlDB.DB) Store {
-	return Store{sqlDB: sqlDB}
+func NewStore(db *gorm.DB) *Store {
+	return &Store{db: db}
 }
 
-// TODO: figure a way to identify the Port to allow the REPLACE/UPDATE
-// instead of just add new records to the DB.
-// It was not allowed in this time because the port.json data did not contains
-// an unique identifier like ID or UUID or something like that
-func (s *Store) Save(port *entity.Port) error {
-	err := s.sqlDB.DB.Create(&port).Error
-	if err != nil {
-		return err
-	}
-	return nil
+func (s *Store) Create(ctx context.Context, port entity.Port) error {
+	return s.db.WithContext(ctx).Create(port).Error
 }
 
-// TODO: Implement some limit/pagination
-func (s *Store) Retrieve() (ports []*entity.Port, err error) {
-	ports = []*entity.Port{}
-	err = s.sqlDB.DB.Find(&ports).Error
-	if err != nil {
+func (s *Store) Update(ctx context.Context, port entity.Port) error {
+	return s.db.WithContext(ctx).Save(&port).Error
+}
+
+func (s *Store) Delete(ctx context.Context, id uint) error {
+	return s.db.WithContext(ctx).Delete(entity.Port{}, id).Error
+}
+
+func (s *Store) GetByID(ctx context.Context, id uint) (*entity.Port, error) {
+	var port entity.Port
+	if err := s.db.WithContext(ctx).Where(entity.Port{ID: id}).Find(&port).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, entity.ErrPortNotFound
+		}
 		return nil, err
 	}
+
+	return &port, nil
+}
+
+func (s *Store) GetByUnloc(ctx context.Context, unloc string) (*entity.Port, error) {
+	var port entity.Port
+	if err := s.db.WithContext(ctx).Where(entity.Port{Unlocs: unloc}).Find(&port).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, entity.ErrPortNotFound
+		}
+		return nil, err
+	}
+
+	return &port, nil
+}
+
+func (s *Store) GetAll(ctx context.Context) ([]entity.Port, error) {
+	var ports []entity.Port
+
+	if err := s.db.WithContext(ctx).Find(&ports).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, entity.ErrPortNotFound
+		}
+		return nil, err
+	}
+
 	return ports, nil
 }

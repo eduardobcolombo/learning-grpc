@@ -1,85 +1,151 @@
 # GRPC Learning
 
-    This is a grpc test learning built in golang 1.16 using protobuf.
+This repository demonstrates a gRPC learning project built with **Go 1.22**.
 
+[Next Steps](#next-steps)
+
+---
+
+## Test Coverage
+
+56.2% test coverage.
+
+---
 
 ## Protobuf
 
-To run the protobuf you can use the below command:
-`$ make generate`
+To generate protobuf files, run:
 
-## Docker 
+```bash
+$ make generate
+```
 
-In order to make things easy for devs, I created a make file to run docker commands, so fell free to check the flavours:
+---
 
-`$ make up` will start the docker-composer with all instances (Db, Client and Server).
-You can test if it is working firing some curls like below:
+## Docker
 
-`$ make send` It will load all ports to the DB
-`$ make get` It will get all ports from DB
+To simplify development, a `Makefile` is provided for Docker operations. Below are the key commands:
 
-`$ make down` will put the docker-composer down
+- **Start Docker Compose with all instances (DB, Client, and Server):**
+  ```bash
+  $ make up
+  ```
+  Test the setup by running:
+  ```bash
+  $ make send    # Load ports to the database
+  $ make get     # Fetch ports from the database
+  ```
 
-## Kubernetes
+- **Stop and remove Docker Compose:**
+  ```bash
+  $ make down
+  ```
 
-We are running it using KinD to provide a local cluster.
+---
 
-`$ make kind-init` Shortcut to init KinD with the images.
+## Kubernetes (KinD)
 
-`$ make kind-watch` Monitoring pods with watch.
+We use **KinD (Kubernetes in Docker)** for a local Kubernetes cluster. Here are the available commands:
 
-`$ make db` Get a DB session.
+- **Cluster management:**
+  ```bash
+  $ make kind-create       # Create a local KinD cluster
+  $ make kind-delete       # Delete all resources in ./deploy/k8s
+  $ make kind-clean        # Delete the entire KinD cluster
+  ```
 
+- **Cluster setup:**
+  ```bash
+  $ make kind-init         # Initialize KinD with necessary images
+  $ make kind-load         # Load Docker-built images into the cluster
+  ```
 
+- **Resource management:**
+  ```bash
+  $ make kind-apply        # Apply the Kubernetes YAML files in ./deploy/k8s
+  $ make kind-apply-secrets # Apply secrets from the .env file
+  ```
 
+- **Monitoring:**
+  ```bash
+  $ make kind-watch        # Watch the pods' status
+  ```
 
-`$ make kind-create` Creates a KinD cluster locally.
+- **Database session:**
+  ```bash
+  $ make db                # Connect to the database session
+  ```
 
-`$ make kind-apply-secrets` Apply secrets based on the .env file
+---
 
-`$ make kind-config` Set the current cluster to the context and load env variables.
+## Running Locally
 
-`$ make kind-load` Load docker built images to the KinD cluster.
+- **Start the gRPC server:**
+  ```bash
+  $ make run-server
+  ```
 
-`$ make kind-apply` Apply the k8s folder with yaml files to the cluster.
+- **Start the gRPC client to send messages to the server:**
+  ```bash
+  $ make run-client
+  ```
 
-`$ make kind-delete` Delete all resources hostedn in the ./k8s
+---
 
-`$ make kind-clean` Delete the cluster.
+## Building Locally
 
-## Running locally
+Build Go binaries for server and client:
 
-`$ make run-server` will run the local grpc server
+- **Server binary:**
+  ```bash
+  $ make build-server-bin
+  ```
 
-`$ make run-client` will run the local grpc client to send message to the server
+- **Client binary:**
+  ```bash
+  $ make build-client-bin
+  ```
 
-## Builing locally binary
+The binaries will be exported to the `bin` folder.
 
-`$ make build-server-bin` will build the server go package and export it to the bin folder
+---
 
-`$ make build-client-bin` will build the client go package and export it to the bin folder
+## Running Tests
 
-## Running tests
+Run the test suite:
 
-`$ make test` will run the test suite
+```bash
+$ make test
+```
 
-## Running lint
+---
 
-`$ make lint` will run the linter
+## Linting
 
-## Useful tools
+Run the linter to ensure code quality:
 
-`$ make expose` will run expose the api to access locally.
+```bash
+$ make lint
+```
 
-## Next steps:
+---
 
-The ports.json file does not have enough data to have an unique identifier like ID or UUID 
-or something like this.
+## Useful Tools
 
-Figure out a way to identify ports and allow it to be updated instead of just inserting.
+- **Expose API for local access:**
+  ```bash
+  $ make expose
+  ```
 
-Add more tests
+---
 
-Add more grpc status messages through the client server communication using codes and status from the packages
-`"google.golang.org/grpc/codes"`
-`"google.golang.org/grpc/status"`
+## Next Steps
+
+1. **Improve data structure:**  
+56.2% test coverage.
+  Write additional tests to increase the overall coverage.
+
+2. **Add detailed gRPC status codes:**  
+  Use `codes` and `status` from the following packages to improve client-server communication:
+  - `google.golang.org/grpc/codes`
+  - `google.golang.org/grpc/status`

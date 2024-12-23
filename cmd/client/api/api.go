@@ -9,39 +9,33 @@ import (
 )
 
 type API struct {
-	router *mux.Router
+	Router *mux.Router
 }
 
-// New creates a new API struct
+// New creates a new API struct.
 func New() *API {
 	return &API{
-		router: mux.NewRouter(),
+		Router: mux.NewRouter(),
 	}
 }
 
-// Handler will return the router
-func (a *API) Handler() http.Handler {
-	return a.router
-}
-
-// Routes write the routes in the router
-func (a *API) Routes(coreCfg CoreConfig, cfg *Config) {
+// Routes write the routes in the Router
+func (a *API) Routes(handlerPort handlers.Handler) {
 	ver := "/v1"
 
-	portHandler := handlers.Handler{
-		Core: coreCfg.Port,
-	}
+	a.Router.HandleFunc(ver+"/ports", handlerPort.Retrieve).Methods(http.MethodGet, http.MethodOptions)
+	a.Router.HandleFunc(ver+"/ports", handlerPort.Update).Methods(http.MethodPost, http.MethodOptions)
+	// a.Router.HandleFunc(ver+"/ports", handlerPort.Create).Methods(http.MethodPost, http.MethodOptions)
+	// a.Router.HandleFunc(ver+"/ports/{id}", handlerPort.RetrievePort).Methods(http.MethodGet, http.MethodOptions)
+	// a.Router.HandleFunc(ver+"/ports/{id}", handlerPort.UpdatePort).Methods(http.MethodPut, http.MethodOptions)
+	// a.Router.HandleFunc(ver+"/ports/{id}", handlerPort.DeletePort).Methods(http.MethodDelete, http.MethodOptions)
 
-	a.router.HandleFunc(ver+"/ports", portHandler.RetrievePorts).Methods(http.MethodGet, http.MethodOptions)
-	a.router.HandleFunc(ver+"/ports", portHandler.UpdatePorts).Methods(http.MethodPost, http.MethodOptions)
-
-	a.router.HandleFunc("/debug/liveness", liveness)
-	a.router.HandleFunc("/debug/readiness", readiness)
+	a.Router.HandleFunc("/liveness", Liveness)
+	a.Router.HandleFunc("/readiness", Readiness)
 }
 
 // Mid set all middlewares
 func (a *API) Mid(cfg *Config) {
-	a.router.Use(mux.CORSMethodMiddleware(a.router))
-	a.router.Use(mid.CORS())
-	a.router.Use(mid.Authenticate)
+	a.Router.Use(mux.CORSMethodMiddleware(a.Router))
+	a.Router.Use(mid.Authenticate)
 }
