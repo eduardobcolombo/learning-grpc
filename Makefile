@@ -1,48 +1,13 @@
 ##################
 ### Environment variables
 ##################
-GRPC_HOST=localhost
-GRPC_PORT=50053
-API_PORT=8888
-LOCAL_PATH=/app
-DB_HOST=localhost
-DB_PASSWORD=passwd
-DB_USER=user
-DB_NAME=db
-DB_PORT=5432
+include ./deploy/make.env
 
-## Docker image name
-IMG := eduardobcolombo/
-VERSION := 1.0 # $(shell git rev-parse --short HEAD)
-CLUSTER := grpc-cluster
-NAMESPACE := grpc
+VERSION=1.0 # $(shell git rev-parse --short HEAD)
 
 ##################
 ### Build section
 ##################
-## Shortcut to build docker images.
-build-img: build-server-img build-client-img
-.PHONY: build-img
-## Build a docker image for the server service.
-build-server-img:
-	@docker build \
-	-f ./docker/Dockerfile.server \
-	-t $(IMG)server:$(VERSION) \
-	--build-arg BUILD_REF=$(VERSION) \
-	--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-	.
-.PHONY: build-server-img
-
-## Build a docker image for the client service.
-build-client-img:
-	@docker build \
-	-f ./docker/Dockerfile.client \
-	-t $(IMG)client:$(VERSION) \
-	--build-arg BUILD_REF=$(VERSION) \
-	--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-	.
-.PHONY: build-client-img
-
 ## Shortcut to build the binary files.
 build-bin: build-server-bin build-client-bin
 .PHONY: build-bin
@@ -52,7 +17,7 @@ build-server-bin:
 	@docker run --rm \
 		-v ${PWD}:$(LOCAL_PATH) \
 		-w $(LOCAL_PATH) -e GOOS=linux -e GOARCH=amd64 \
-		golang:1.16 \
+		golang:$(GO_VERSION) \
 		go build -o bin/server.bin ./cmd/server/main.go
 .PHONY: build-server-bin
 
@@ -61,9 +26,50 @@ build-client-bin:
 	@docker run --rm \
 		-v ${PWD}:$(LOCAL_PATH) \
 		-w $(LOCAL_PATH) -e GOOS=linux -e GOARCH=amd64 \
-		golang:1.16 \
+		golang:$(GO_VERSION) \
 		go build -o bin/client.bin ./cmd/client/main.go
 .PHONY: build-client-bin
+
+## Shortcut to build docker images.
+build-img: build-server-img build-client-img
+.PHONY: build-img
+## Build a docker image for the server service.
+build-server-img:
+	docker build \
+	-f ./deploy/docker/Dockerfile.server \
+	-t $(IMG)server:$(VERSION) \
+	--build-arg BUILD_REF=$(VERSION) \
+	--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+	.
+.PHONY: build-server-img
+
+## Build a docker image for the client service.
+build-client-img:
+	docker build \
+	-f ./deploy/docker/Dockerfile.client \
+	-t $(IMG)client:$(VERSION) \
+	--build-arg BUILD_REF=$(VERSION) \
+	--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+	.
+.PHONY: build-client-img
+
+##################
+### Docker Compose section
+##################
+## Spin up the docker compose file with the env variables set.
+up: 
+	@docker compose \
+	-f docker-compose.yml  \
+	up --force-recreate --build -d
+.PHONY: up
+
+## Remove all the created containers based on the docker compose.yaml.
+clean: 
+	@docker compose \
+	-f docker-compose.yml  \
+	down --remove-orphans -v
+.PHONY: clean
+
 
 ##################
 ### KinD - Kubernetes in Docker section.
@@ -82,13 +88,13 @@ kind-apply-secrets:
 	@kubectl create secret generic server-secrets \
 		--from-env-file=./deploy/server.env \
 		--namespace $(NAMESPACE) --cluster kind-$(CLUSTER) --dry-run=client -o yaml \
-	> ./k8s/server-secrets.yaml
-	@kubectl apply -f ./k8s/server-secrets.yaml --namespace $(NAMESPACE) --cluster kind-$(CLUSTER)
+	> ./deploy/k8s/server-secrets.yaml
+	@kubectl apply -f ./deploy/k8s/server-secrets.yaml --namespace $(NAMESPACE) --cluster kind-$(CLUSTER)
 	@kubectl create secret generic client-secrets \
 		--from-env-file=./deploy/client.env \
 		--namespace $(NAMESPACE) --cluster kind-$(CLUSTER) --dry-run=client -o yaml \
-	> ./k8s/client-secrets.yaml
-	@kubectl apply -f ./k8s/client-secrets.yaml --namespace $(NAMESPACE) --cluster kind-$(CLUSTER)
+	> ./deploy/k8s/client-secrets.yaml
+	@kubectl apply -f ./deploy/k8s/client-secrets.yaml --namespace $(NAMESPACE) --cluster kind-$(CLUSTER)
 .PHONY: kind-apply-secrets
 
 ## Set the current cluster to the context and load env variables.
@@ -104,14 +110,15 @@ kind-load:
 
 ## Apply the k8s folder with yaml files to the cluster.
 kind-apply: 
-	@kubectl apply -f ./k8s/namespace --cluster kind-$(CLUSTER)
-	@kubectl apply -f ./k8s/db --cluster kind-$(CLUSTER)
-	@kubectl apply -f ./k8s/deployment --cluster kind-$(CLUSTER)
+	@kubectl apply -f ./deploy/k8s/namespace --cluster kind-$(CLUSTER)
+	@kubectl apply -f ./deploy/k8s/db --cluster kind-$(CLUSTER)
+	@kubectl apply -f ./deploy/k8s/deployment --cluster kind-$(CLUSTER)
+	@kubectl apply -f ./deploy/k8s/traefik --cluster kind-$(CLUSTER)
 .PHONY: kind-apply
 
-# Delete all resources hostedn in the ./k8s
+# Delete all resources hostedn in the ./deploy/k8s
 kind-delete:
-	@kubectl delete -f ./k8s/namespace --cluster kind-$(CLUSTER)
+	@kubectl delete -f ./deploy/k8s/namespace --cluster kind-$(CLUSTER)
 .PHONY: kind-delete
 
 # Delete the cluster.
@@ -124,32 +131,15 @@ kind-watch:
 	@watch kubectl get all --namespace $(NAMESPACE)
 .PHONY: kind-watch
 
+expose:
+	@kubectl port-forward service/client 8888
+.PHONY: expose
+
 # Get a DB session
 db:
 	kubectl exec -it deploy/postgres --namespace $(NAMESPACE) --cluster kind-$(CLUSTER) -- \
 	psql -h $(DB_HOST) -U $(DB_USER) --password -p $(DB_PORT) $(DB_NAME)
 .PHONY: db
-
-
-
-##################
-### Docker Compose section
-##################
-## Spin up the docker compose file with the env variables set.
-up: 
-	@docker-compose \
-	-f docker-compose.yml \
-	--env-file ./deploy/docker-local.env \
-	up --force-recreate --build -d
-.PHONY: up
-
-## Remove all the created containers based on the docker-compose.yaml.
-clean: 
-	@docker-compose \
-	-f docker-compose.yml \
-	--env-file ./deploy/docker-local.env \
-	down --remove-orphans -v
-.PHONY: clean
 
 ##################
 ### Golang tools section
@@ -160,31 +150,12 @@ tidy:
 	@go mod vendor
 .PHONY: tidy
 
-## Run the server based on the environment variables.
-run-server:
-	@export GRPC_HOST=$(GRPC_HOST) \
-		    GRPC_PORT=$(GRPC_PORT) \
-		    DB_HOST=$(DB_HOST) \
-		    DB_PASSWORD=$(DB_PASSWORD) \
-		    DB_USER=$(DB_USER) \
-		    DB_NAME=$(DB_NAME) \
-		    DB_PORT=$(DB_PORT) \
-			; \
-	go run ./cmd/server/main.go
-.PHONY: run-server
-
-## Run the client based on the environment variables.
-run-client:
-	@export GRPC_HOST=$(GRPC_HOST) \
-			GRPC_PORT=$(GRPC_PORT) \
-			API_PORT=$(API_PORT) \
-			; \
-	go run ./cmd/client/main.go
-.PHONY: run-client
-
 ## Run the lint to make sure all is good.
 lint:
-	@golangci-lint run
+	docker run --rm -t \
+		-v "$(PWD):/app" \
+		--workdir /app \
+		golangci/golangci-lint:v1.62.2 golangci-lint run
 .PHONY: lint
 
 ## Generate the protobuf files.
@@ -193,31 +164,28 @@ generate:
 .PHONY: generate
 
 ## Run tests.
-test:
-	@echo "-> Testing"; \
-	export HOST=$(GRPC_HOST) \
-		   PORT=$(GRPC_PORT) \
-		   API_PORT=$(API_PORT) \
-		   DB_HOST=$(DB_HOST) \
-		   DB_PASSWORD=$(DB_PASSWORD) \
-		   DB_USER=$(DB_USER) \
-		   DB_NAME=$(DB_NAME) \
-		   DB_PORT=$(DB_PORT) \
-		   ; \
-	go test ./cmd/... -v -race -cover -count=1	
-	go test ./internal/... -v -race -cover -count=1	
+test: 
+	go test -v -mod=vendor -coverprofile=coverage.out -covermode=set -cover  -count=1 -timeout 60s \
+	$$(go list ./... | grep -v '/testhelpers' | grep -v '/portpb')
+	@coverage=$$(go tool cover -func coverage.out | tail -n 1 | awk '{print $$3;}'); \
+		sed -i.bak -e "s/.*test coverage.*/$${coverage} test coverage./" README.md && rm README.md.bak
 .PHONY: test
-
-expose:
-	@kubectl port-forward service/client 8888
-.PHONY: expose
 
 # Send the ports.json file to the client.
 send: 
 	@curl -v -F file=@data/ports.json http://localhost:8888/v1/ports
 .PHONY: send
 
-# Send the ports.json file to the client.
 get: 
 	@curl http://localhost:8888/v1/ports -X GET
+.PHONY: get
+
+healthcheck: liveness readiness
+
+liveness: 
+	@curl http://localhost:8888/liveness -X GET
+.PHONY: get
+
+readiness: 
+	@curl http://localhost:8888/readiness -X GET
 .PHONY: get

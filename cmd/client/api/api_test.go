@@ -1,66 +1,51 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"strings"
 	"testing"
 
-	"github.com/eduardobcolombo/learning-grpc/cmd/client/core/port"
-	"github.com/eduardobcolombo/learning-grpc/internal/pkg/foundation"
-	"go.uber.org/zap"
+	mock_core_port "github.com/eduardobcolombo/learning-grpc/cmd/client/core/port/mock_port"
+	"github.com/eduardobcolombo/learning-grpc/cmd/client/handlers"
+	"github.com/eduardobcolombo/learning-grpc/foundation"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
-// var testFileName = "../../../test/data/ports_test.json"
-// var testFileName2Records = "../../../test/data/ports_test_2_records.json"
-var cfg = GetEnvTest()
-
-// Construct the application logger.
-var testLog = func() *zap.SugaredLogger {
-	log, err := foundation.NewLogger("GW-API")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer log.Sync()
-	return log
-}()
-var core = CoreConfig{
-	Port: port.NewCore(testLog, cfg.PSC),
-}
-var rt = ServerWithMiddlewares(core, cfg)
-
-type ReqTest struct {
-	Verb string
-	URL  string
-	Body string
-}
-
-func GetEnvTest() *Config {
-	testing.Init()
+func TestRoutes(t *testing.T) {
 	cfg := &Config{}
-	return cfg
-}
+	log, _ := foundation.NewLogger(&foundation.LoggerConfig{})
 
-func ServerWithMiddlewares(core CoreConfig, cfg *Config) http.Handler {
-	a := New()
-	a.Routes(core, cfg)
-	a.Mid(cfg)
+	ctrl := gomock.NewController(t)
+	coreService := mock_core_port.NewMockCoreService(ctrl)
+	handlerPort := handlers.NewHandler(coreService, log)
+	api := New()
+	api.Routes(handlerPort)
+	api.Mid(cfg)
 
-	return a.router
-}
-
-func MakeRequest(r ReqTest) (res *httptest.ResponseRecorder) {
-	b := strings.NewReader(r.Body)
-	req, _ := http.NewRequest(r.Verb, r.URL, b)
-	if r.Verb == "POST" {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	tests := []struct {
+		method        string
+		url           string
+		expectedCalls func()
+	}{
+		{method: http.MethodGet, url: "/v1/ports", expectedCalls: func() {
+			coreService.EXPECT().Retrieve().AnyTimes()
+		}},
+		{method: http.MethodPost, url: "/v1/ports", expectedCalls: func() {}},
+		{method: http.MethodOptions, url: "/v1/ports", expectedCalls: func() {}},
+		{method: http.MethodGet, url: "/liveness", expectedCalls: func() {}},
+		{method: http.MethodGet, url: "/readiness", expectedCalls: func() {}},
 	}
 
-	res = httptest.NewRecorder()
-	rt.ServeHTTP(res, req)
+	for _, tt := range tests {
+		req, err := http.NewRequest(tt.method, tt.url, nil)
+		assert.NoError(t, err)
 
-	return res
+		tt.expectedCalls()
+
+		rr := httptest.NewRecorder()
+		api.Router.ServeHTTP(rr, req)
+
+		assert.NotEqual(t, http.StatusNotFound, rr.Code, "Expected route to be registered")
+	}
 }

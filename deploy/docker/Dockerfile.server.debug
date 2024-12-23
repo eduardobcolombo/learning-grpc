@@ -1,0 +1,20 @@
+FROM golang:1.22 as server-builder
+
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+
+WORKDIR /app
+COPY . .
+RUN go build -o /server-app ./cmd/server/main.go
+
+# Get Delve for debugging
+WORKDIR /go/src/
+RUN go install -mod='' github.com/go-delve/delve/cmd/dlv@v1.22.1
+
+FROM scratch as server
+
+COPY --from=server-builder /server-app /svc
+COPY --from=server-builder /go/bin/dlv /
+
+EXPOSE 8000 40000
+CMD ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--continue", "--accept-multiclient", "exec", "/svc"]

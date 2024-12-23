@@ -1,0 +1,16 @@
+FROM golang:1.22 AS server_builder
+
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+
+WORKDIR /app
+COPY . .
+RUN go build -o /server-app /app/cmd/server/main.go
+
+FROM scratch AS server
+
+COPY --from=server_builder /app/migrations /migrations
+COPY --from=server_builder /server-app /svc
+
+EXPOSE 8000
+CMD ["/svc"]

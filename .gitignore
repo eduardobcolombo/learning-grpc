@@ -18,3 +18,5 @@ deploy/docker-local.env
 deploy/server.env
 k8s/client-secrets.yaml
 k8s/server-secrets.yaml
+deploy/make.env
+coverage.out

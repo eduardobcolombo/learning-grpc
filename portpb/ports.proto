@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package port;
+option go_package = "github.com/eduardobcolombo/learning-grpc/portpb";
+
+message Port {
+    string name = 1;
+    string city = 2;
+    string country = 3;
+    string alias = 4;
+    string regions = 5;
+    double latitude = 6;
+    double longitude = 7;
+    string province = 8;
+    string timezone = 9;
+    string unlocs = 10;
+    string code = 11;
+    uint32 id = 12;
+}
+
+message PortRequest {
+    Port port = 1;
+}
+
+message PortResponse {
+    Port port = 1;
+}
+
+message PortStringResponse {
+    string result = 1;
+}
+
+message PortBoolResponse {
+    bool result = 1;
+}
+
+message PortIdRequest {
+    uint32 id = 1;
+}
+
+message PortUnlocRequest {
+    string unloc = 1;
+}
+
+message PortsGetAllRequest {
+
+}
+
+service PortService{
+    // Client Streaming
+    rpc UpdateAll (stream PortRequest) returns (PortStringResponse) {};
+    // Server Streaming
+    rpc GetAll(PortsGetAllRequest) returns (stream PortResponse) {};
+    rpc GetById(PortIdRequest) returns (PortResponse) {};
+    rpc GetByUnloc(PortUnlocRequest) returns (PortResponse) {};
+
+    rpc Create (PortRequest) returns (PortBoolResponse) {};
+    rpc Update (PortRequest) returns (PortBoolResponse) {};
+    rpc Delete (PortIdRequest) returns (PortBoolResponse) {};
+}
